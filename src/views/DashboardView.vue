@@ -1,4 +1,4 @@
-<!-- Template con filtros corregidos - utilizando datos reales de la API -->
+<!-- Template con filtros corregidos y permisos de administrador -->
 <template>
   <div class="dashboard-container">
     <!-- Sidebar -->
@@ -11,7 +11,9 @@
           <div class="avatar">{{ getInitials() }}</div>
           <div class="user-details">
             <span class="user-name">{{ username }}</span>
-            <span class="user-role">Administrador</span>
+            <span class="user-role">
+              {{ isAdmin ? "Administrador" : "Usuario" }}
+            </span>
           </div>
         </div>
       </div>
@@ -104,6 +106,7 @@
             </span>
           </div>
           <button
+            v-if="isAdmin"
             @click="
               activeSection === 'clientes'
                 ? openClientModal(null)
@@ -185,7 +188,7 @@
                   <th class="column-id">ID</th>
                   <th class="column-name">Nombre Empresa</th>
                   <th class="column-date">Fecha Registro</th>
-                  <th class="column-actions">Acciones</th>
+                  <th v-if="isAdmin" class="column-actions">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -217,7 +220,7 @@
                       }}</span>
                     </div>
                   </td>
-                  <td class="column-actions">
+                  <td v-if="isAdmin" class="column-actions">
                     <div class="action-buttons">
                       <button
                         @click="openClientModal(cliente)"
@@ -271,7 +274,7 @@
                   </td>
                 </tr>
                 <tr v-if="filteredClientes.length === 0" class="empty-row">
-                  <td colspan="4" class="empty-message">
+                  <td :colspan="isAdmin ? 4 : 3" class="empty-message">
                     <div class="empty-content">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -334,7 +337,7 @@
                 <tr>
                   <th class="column-id">ID</th>
                   <th class="column-name">Nombre del Servicio</th>
-                  <th class="column-actions">Acciones</th>
+                  <th v-if="isAdmin" class="column-actions">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -358,7 +361,7 @@
                       }}</span>
                     </div>
                   </td>
-                  <td class="column-actions">
+                  <td v-if="isAdmin" class="column-actions">
                     <div class="action-buttons">
                       <button
                         @click="openTipoServicioModal(tipoServicio)"
@@ -415,7 +418,7 @@
                   v-if="filteredTiposServicios.length === 0"
                   class="empty-row"
                 >
-                  <td colspan="3" class="empty-message">
+                  <td :colspan="isAdmin ? 3 : 2" class="empty-message">
                     <div class="empty-content">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -548,7 +551,7 @@
                   <th class="column-user">Usuario</th>
                   <th class="column-desc">Notas</th>
                   <th class="column-date">Fecha</th>
-                  <th class="column-actions">Acciones</th>
+                  <th v-if="isAdmin" class="column-actions">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -593,7 +596,7 @@
                       }}</span>
                     </div>
                   </td>
-                  <td class="column-actions">
+                  <td v-if="isAdmin" class="column-actions">
                     <div class="action-buttons">
                       <button
                         @click="openRegistroModal(registro)"
@@ -647,7 +650,7 @@
                   </td>
                 </tr>
                 <tr v-if="filteredRegistros.length === 0" class="empty-row">
-                  <td colspan="7" class="empty-message">
+                  <td :colspan="isAdmin ? 7 : 6" class="empty-message">
                     <div class="empty-content">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -672,348 +675,350 @@
           </div>
         </div>
       </div>
+
+      <!-- Modal para Clientes -->
+      <div v-if="showClientModal" class="modal-backdrop">
+        <div class="modal-container" @click.stop>
+          <div class="modal-header">
+            <h2>
+              {{ isEditingClient ? "Editar Cliente" : "Crear Nuevo Cliente" }}
+            </h2>
+            <button @click="closeClientModal" class="modal-close-button">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <form @submit.prevent="saveCliente" class="modal-form">
+            <div class="form-group">
+              <label for="nombreEmpresa">Nombre de la Empresa</label>
+              <input
+                id="nombreEmpresa"
+                v-model="currentCliente.nombre_Empresa"
+                placeholder="Ingrese el nombre de la empresa"
+                required
+                class="form-input"
+              />
+            </div>
+
+            <div class="modal-footer">
+              <button
+                type="button"
+                @click="closeClientModal"
+                class="modal-button cancel-button"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="modal-button save-button">
+                {{ isEditingClient ? "Actualizar" : "Crear" }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal para Tipos de Servicio -->
+      <div v-if="showTipoServicioModal" class="modal-backdrop">
+        <div class="modal-container" @click.stop>
+          <div class="modal-header">
+            <h2>
+              {{
+                isEditingTipoServicio
+                  ? "Editar Tipo de Servicio"
+                  : "Crear Nuevo Tipo de Servicio"
+              }}
+            </h2>
+            <button @click="closeTipoServicioModal" class="modal-close-button">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <form @submit.prevent="saveTipoServicio" class="modal-form">
+            <div class="form-group">
+              <label for="nombreServicio">Nombre del Servicio</label>
+              <input
+                id="nombreServicio"
+                v-model="currentTipoServicio.nombre"
+                placeholder="Ingrese el nombre del servicio"
+                required
+                class="form-input"
+              />
+            </div>
+
+            <div class="modal-footer">
+              <button
+                type="button"
+                @click="closeTipoServicioModal"
+                class="modal-button cancel-button"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="modal-button save-button">
+                {{ isEditingTipoServicio ? "Actualizar" : "Crear" }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- Modal para Registros -->
+      <div v-if="showRegistroModal" class="modal-backdrop">
+        <div class="modal-container" @click.stop>
+          <div class="modal-header">
+            <h2>
+              {{
+                isEditingRegistro ? "Editar Registro" : "Crear Nuevo Registro"
+              }}
+            </h2>
+            <button @click="closeRegistroModal" class="modal-close-button">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <form @submit.prevent="saveRegistro" class="modal-form">
+            <div class="form-group">
+              <label for="clienteSelect">Cliente</label>
+              <select
+                id="clienteSelect"
+                v-model="currentRegistro.id_Cliente"
+                required
+                class="form-select"
+              >
+                <option value="" disabled selected>
+                  Seleccione un cliente
+                </option>
+                <option
+                  v-for="cliente in clientes"
+                  :key="cliente.id_Cliente"
+                  :value="cliente.id_Cliente"
+                >
+                  {{ cliente.nombre_Empresa }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="servicioSelect">Tipo de Servicio</label>
+              <select
+                id="servicioSelect"
+                v-model="currentRegistro.id_TipoServicio"
+                required
+                class="form-select"
+              >
+                <option value="" disabled selected>
+                  Seleccione un tipo de servicio
+                </option>
+                <option
+                  v-for="servicio in tiposServicios"
+                  :key="servicio.id_TipoServicio"
+                  :value="servicio.id_TipoServicio"
+                >
+                  {{ servicio.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="usuario">Usuario</label>
+              <input
+                id="usuario"
+                v-model="currentRegistro.usuario"
+                placeholder="Ingrese el usuario"
+                required
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Contraseña</label>
+              <input
+                id="password"
+                v-model="currentRegistro.contraseña"
+                type="password"
+                placeholder="Ingrese la contraseña"
+                :required="!isEditingRegistro"
+                class="form-input"
+              />
+              <small v-if="isEditingRegistro" class="form-hint"
+                >Dejar en blanco para mantener la contraseña actual</small
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="notas">Notas</label>
+              <textarea
+                id="notas"
+                v-model="currentRegistro.notas"
+                placeholder="Ingrese notas adicionales"
+                class="form-textarea"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <button
+                type="button"
+                @click="closeRegistroModal"
+                class="modal-button cancel-button"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="modal-button save-button">
+                {{ isEditingRegistro ? "Actualizar" : "Crear" }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal de Confirmación para Eliminar -->
+      <div v-if="showDeleteConfirmModal" class="modal-backdrop">
+        <div class="modal-container delete-confirm-modal" @click.stop>
+          <div class="modal-header delete-header">
+            <h2>Confirmar Eliminación</h2>
+            <button @click="closeDeleteConfirmModal" class="modal-close-button">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="delete-warning-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="48"
+                height="48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                ></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <p>
+              ¿Estás seguro de que deseas eliminar
+              <strong>{{ deleteItemName }}</strong
+              >?
+            </p>
+            <p class="delete-warning">Esta acción no se puede deshacer.</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              @click="closeDeleteConfirmModal"
+              class="modal-button cancel-button"
+            >
+              Cancelar
+            </button>
+            <button @click="executeDelete" class="modal-button delete-button">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sistema de notificaciones -->
+      <div class="notifications-container">
+        <div
+          v-for="(notification, index) in notifications"
+          :key="index"
+          :class="['notification', `notification-${notification.type}`]"
+        >
+          <div class="notification-icon">
+            <svg
+              v-if="notification.type === 'success'"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+              <path d="M22 4L12 14.01l-3-3"></path>
+            </svg>
+            <svg
+              v-else-if="notification.type === 'error'"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <svg
+              v-else
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <div class="notification-content">
+            <p>{{ notification.message }}</p>
+          </div>
+          <button class="notification-close" @click="removeNotification(index)">
+            ×
+          </button>
+        </div>
+      </div>
     </main>
-
-    <!-- Modal para Clientes -->
-    <div v-if="showClientModal" class="modal-backdrop">
-      <div class="modal-container" @click.stop>
-        <div class="modal-header">
-          <h2>
-            {{ isEditingClient ? "Editar Cliente" : "Crear Nuevo Cliente" }}
-          </h2>
-          <button @click="closeClientModal" class="modal-close-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <form @submit.prevent="saveCliente" class="modal-form">
-          <div class="form-group">
-            <label for="nombreEmpresa">Nombre de la Empresa</label>
-            <input
-              id="nombreEmpresa"
-              v-model="currentCliente.nombre_Empresa"
-              placeholder="Ingrese el nombre de la empresa"
-              required
-              class="form-input"
-            />
-          </div>
-
-          <div class="modal-footer">
-            <button
-              type="button"
-              @click="closeClientModal"
-              class="modal-button cancel-button"
-            >
-              Cancelar
-            </button>
-            <button type="submit" class="modal-button save-button">
-              {{ isEditingClient ? "Actualizar" : "Crear" }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal para Tipos de Servicio -->
-    <div v-if="showTipoServicioModal" class="modal-backdrop">
-      <div class="modal-container" @click.stop>
-        <div class="modal-header">
-          <h2>
-            {{
-              isEditingTipoServicio
-                ? "Editar Tipo de Servicio"
-                : "Crear Nuevo Tipo de Servicio"
-            }}
-          </h2>
-          <button @click="closeTipoServicioModal" class="modal-close-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <form @submit.prevent="saveTipoServicio" class="modal-form">
-          <div class="form-group">
-            <label for="nombreServicio">Nombre del Servicio</label>
-            <input
-              id="nombreServicio"
-              v-model="currentTipoServicio.nombre"
-              placeholder="Ingrese el nombre del servicio"
-              required
-              class="form-input"
-            />
-          </div>
-
-          <div class="modal-footer">
-            <button
-              type="button"
-              @click="closeTipoServicioModal"
-              class="modal-button cancel-button"
-            >
-              Cancelar
-            </button>
-            <button type="submit" class="modal-button save-button">
-              {{ isEditingTipoServicio ? "Actualizar" : "Crear" }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal para Registros -->
-    <div v-if="showRegistroModal" class="modal-backdrop">
-      <div class="modal-container" @click.stop>
-        <div class="modal-header">
-          <h2>
-            {{ isEditingRegistro ? "Editar Registro" : "Crear Nuevo Registro" }}
-          </h2>
-          <button @click="closeRegistroModal" class="modal-close-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <form @submit.prevent="saveRegistro" class="modal-form">
-          <div class="form-group">
-            <label for="clienteSelect">Cliente</label>
-            <select
-              id="clienteSelect"
-              v-model="currentRegistro.id_Cliente"
-              required
-              class="form-select"
-            >
-              <option value="" disabled selected>Seleccione un cliente</option>
-              <option
-                v-for="cliente in clientes"
-                :key="cliente.id_Cliente"
-                :value="cliente.id_Cliente"
-              >
-                {{ cliente.nombre_Empresa }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="servicioSelect">Tipo de Servicio</label>
-            <select
-              id="servicioSelect"
-              v-model="currentRegistro.id_TipoServicio"
-              required
-              class="form-select"
-            >
-              <option value="" disabled selected>
-                Seleccione un tipo de servicio
-              </option>
-              <option
-                v-for="servicio in tiposServicios"
-                :key="servicio.id_TipoServicio"
-                :value="servicio.id_TipoServicio"
-              >
-                {{ servicio.nombre }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="usuario">Usuario</label>
-            <input
-              id="usuario"
-              v-model="currentRegistro.usuario"
-              placeholder="Ingrese el usuario"
-              required
-              class="form-input"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="password">Contraseña</label>
-            <input
-              id="password"
-              v-model="currentRegistro.contraseña"
-              type="password"
-              placeholder="Ingrese la contraseña"
-              :required="!isEditingRegistro"
-              class="form-input"
-            />
-            <small v-if="isEditingRegistro" class="form-hint"
-              >Dejar en blanco para mantener la contraseña actual</small
-            >
-          </div>
-
-          <div class="form-group">
-            <label for="notas">Notas</label>
-            <textarea
-              id="notas"
-              v-model="currentRegistro.notas"
-              placeholder="Ingrese notas adicionales"
-              class="form-textarea"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="modal-footer">
-            <button
-              type="button"
-              @click="closeRegistroModal"
-              class="modal-button cancel-button"
-            >
-              Cancelar
-            </button>
-            <button type="submit" class="modal-button save-button">
-              {{ isEditingRegistro ? "Actualizar" : "Crear" }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal de Confirmación para Eliminar -->
-    <div v-if="showDeleteConfirmModal" class="modal-backdrop">
-      <div class="modal-container delete-confirm-modal" @click.stop>
-        <div class="modal-header delete-header">
-          <h2>Confirmar Eliminación</h2>
-          <button @click="closeDeleteConfirmModal" class="modal-close-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="delete-warning-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="48"
-              height="48"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-              ></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-          </div>
-          <p>
-            ¿Estás seguro de que deseas eliminar
-            <strong>{{ deleteItemName }}</strong
-            >?
-          </p>
-          <p class="delete-warning">Esta acción no se puede deshacer.</p>
-        </div>
-        <div class="modal-footer">
-          <button
-            @click="closeDeleteConfirmModal"
-            class="modal-button cancel-button"
-          >
-            Cancelar
-          </button>
-          <button @click="executeDelete" class="modal-button delete-button">
-            Eliminar
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sistema de notificaciones -->
-    <div class="notifications-container">
-      <div
-        v-for="(notification, index) in notifications"
-        :key="index"
-        :class="['notification', `notification-${notification.type}`]"
-      >
-        <div class="notification-icon">
-          <svg
-            v-if="notification.type === 'success'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-            <path d="M22 4L12 14.01l-3-3"></path>
-          </svg>
-          <svg
-            v-else-if="notification.type === 'error'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
-          </svg>
-          <svg
-            v-else
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-        </div>
-        <div class="notification-content">
-          <p>{{ notification.message }}</p>
-        </div>
-        <button class="notification-close" @click="removeNotification(index)">
-          ×
-        </button>
-      </div>
-    </div>
   </div>
 </template>
-// Script con filtros corregidos - usando datos reales de la API
 <script>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
@@ -1022,6 +1027,10 @@ export default {
   setup() {
     const router = useRouter();
     const username = ref(localStorage.getItem("username") || "Admin");
+    const isAdmin = localStorage.getItem("esAdmin") === "true";
+    const clientesAutorizados = JSON.parse(
+      localStorage.getItem("clientesAutorizados") || "[]"
+    );
 
     // Estado para búsqueda
     const searchQuery = ref("");
@@ -1109,9 +1118,15 @@ export default {
     // Filtrar clientes según la búsqueda
     const filteredClientes = computed(() => {
       const query = searchQuery.value.toLowerCase().trim();
-      if (!query) return clientes.value;
+      let resultClientes = isAdmin
+        ? clientes.value
+        : clientes.value.filter((cliente) =>
+            clientesAutorizados.includes(cliente.id_Cliente)
+          );
 
-      return clientes.value.filter(
+      if (!query) return resultClientes;
+
+      return resultClientes.filter(
         (cliente) =>
           cliente.nombre_Empresa.toLowerCase().includes(query) ||
           cliente.id_Cliente.toString().includes(query)
@@ -1132,7 +1147,11 @@ export default {
 
     // Filtrar registros según búsqueda y filtros
     const filteredRegistros = computed(() => {
-      let result = registros.value;
+      let result = isAdmin
+        ? registros.value
+        : registros.value.filter((registro) =>
+            clientesAutorizados.includes(registro.id_Cliente)
+          );
 
       // Aplicar filtro por tipo de servicio
       if (registroTipoServicioFiltro.value !== "todos") {
@@ -1184,140 +1203,45 @@ export default {
       return result;
     });
 
-    // Formatear fecha
-    const formatDate = (dateString) => {
-      if (!dateString) return "N/A";
-
-      return new Date(dateString).toLocaleDateString("es-ES", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
-    };
-
-    // Obtener tiempo transcurrido
-    const getTimeAgo = (dateString) => {
-      if (!dateString) return "N/A";
-
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) return "Hoy";
-      if (diffDays === 1) return "Ayer";
-      if (diffDays < 30) return `Hace ${diffDays} días`;
-
-      const diffMonths = Math.floor(diffDays / 30);
-      if (diffMonths === 1) return "Hace 1 mes";
-      if (diffMonths < 12) return `Hace ${diffMonths} meses`;
-
-      const diffYears = Math.floor(diffMonths / 12);
-      if (diffYears === 1) return "Hace 1 año";
-      return `Hace ${diffYears} años`;
-    };
-
-    // Obtener nombre del cliente según ID
-    const getClienteName = (id) => {
-      if (!id) return "N/A";
-      const cliente = clientes.value.find((c) => c.id_Cliente == id);
-      return cliente ? cliente.nombre_Empresa : `Cliente #${id}`;
-    };
-
-    // Obtener nombre del servicio según ID
-    const getServicioName = (id) => {
-      if (!id) return "N/A";
-      const servicio = tiposServicios.value.find(
-        (s) => s.id_TipoServicio == id
-      );
-      return servicio ? servicio.nombre : `Servicio #${id}`;
-    };
-
-    // Obtener iniciales para avatar de usuario
-    const getInitials = () => {
-      if (!username.value) return "A";
-      return username.value.charAt(0).toUpperCase();
-    };
-
-    // Obtener inicial para avatar de empresa
-    const getCompanyInitial = (name) => {
-      if (!name) return "E";
-      return name.charAt(0).toUpperCase();
-    };
-
-    // Obtener inicial para avatar de servicio
-    const getServiceInitial = (name) => {
-      if (!name) return "S";
-      return name.charAt(0).toUpperCase();
-    };
-
-    // Obtener inicial para avatar de usuario en registros
-    const getUserInitial = (name) => {
-      if (!name) return "U";
-      return name.charAt(0).toUpperCase();
-    };
-
-    // Obtener cantidad de clientes registrados en los últimos 30 días
-    const getRecentClientsCount = () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      return clientes.value.filter((cliente) => {
-        const registrationDate = new Date(cliente.fechaRegistro);
-        return registrationDate >= thirtyDaysAgo;
-      }).length;
-    };
-
-    // Obtener cantidad de registros de hoy
-    const getTodayRegistrosCount = () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      return registros.value.filter((registro) => {
-        if (!registro.fechaCreacion) return false;
-        const registroDate = new Date(registro.fechaCreacion);
-        registroDate.setHours(0, 0, 0, 0);
-        return registroDate.getTime() === today.getTime();
-      }).length;
-    };
-
-    // Sistema de notificaciones
-    const showNotification = (message, type = "info") => {
-      const notification = {
-        message,
-        type,
-        id: Date.now(),
-      };
-
-      notifications.value.push(notification);
-
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        removeNotification(
-          notifications.value.findIndex((n) => n.id === notification.id)
-        );
-      }, 5000);
-    };
-
-    const removeNotification = (index) => {
-      if (index !== -1) {
-        notifications.value.splice(index, 1);
-      }
-    };
-
-    // Métodos para Clientes
+    // Métodos de fetch optimizados para obtener datos específicos
     const fetchClientes = async () => {
       try {
-        const response = await fetch("http://152.228.135.50:5006/api/Cliente", {
-          method: "GET",
-          headers: { accept: "*/*" },
-        });
+        // Si no es admin, solo traer los clientes autorizados
+        if (!isAdmin) {
+          const clienteFetches = clientesAutorizados.map(async (clienteId) => {
+            const response = await fetch(
+              `http://152.228.135.50:5006/api/Cliente/${clienteId}`,
+              {
+                method: "GET",
+                headers: { accept: "*/*" },
+              }
+            );
 
-        if (!response.ok) {
-          throw new Error("No se pudieron cargar los clientes");
+            if (!response.ok) {
+              throw new Error(`No se pudo cargar el cliente ${clienteId}`);
+            }
+
+            return response.json();
+          });
+
+          clientes.value = await Promise.all(clienteFetches);
+        } else {
+          // Si es admin, traer todos los clientes
+          const response = await fetch(
+            "http://152.228.135.50:5006/api/Cliente",
+            {
+              method: "GET",
+              headers: { accept: "*/*" },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("No se pudieron cargar los clientes");
+          }
+
+          clientes.value = await response.json();
         }
 
-        clientes.value = await response.json();
         showNotification("Clientes cargados correctamente", "info");
       } catch (error) {
         console.error("Error al cargar clientes:", error);
@@ -1325,7 +1249,87 @@ export default {
       }
     };
 
+    const fetchTiposServicios = async () => {
+      try {
+        const response = await fetch(
+          "http://152.228.135.50:5006/api/TipoServicio",
+          {
+            method: "GET",
+            headers: { accept: "*/*" },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("No se pudieron cargar los tipos de servicio");
+        }
+
+        tiposServicios.value = await response.json();
+        showNotification("Tipos de servicio cargados correctamente", "info");
+      } catch (error) {
+        console.error("Error al cargar tipos de servicio:", error);
+        showNotification("Error al cargar los tipos de servicio", "error");
+      }
+    };
+
+    const fetchRegistros = async () => {
+      try {
+        // Si no es admin, solo traer los registros de clientes autorizados
+        if (!isAdmin) {
+          const registroFetches = clientesAutorizados.map(async (clienteId) => {
+            const response = await fetch(
+              `http://152.228.135.50:5006/api/Registro/cliente/${clienteId}`,
+              {
+                method: "GET",
+                headers: { accept: "*/*" },
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error(
+                `No se pudieron cargar los registros del cliente ${clienteId}`
+              );
+            }
+
+            return response.json();
+          });
+
+          // Aplanar los resultados de los fetches y eliminar duplicados
+          const resultados = await Promise.all(registroFetches);
+          const registrosUnicos = [
+            ...new Set(resultados.flat().map(JSON.stringify)),
+          ].map(JSON.parse);
+          registros.value = registrosUnicos;
+        } else {
+          // Si es admin, traer todos los registros
+          const response = await fetch(
+            "http://152.228.135.50:5006/api/Registro",
+            {
+              method: "GET",
+              headers: { accept: "*/*" },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("No se pudieron cargar los registros");
+          }
+
+          registros.value = await response.json();
+        }
+
+        showNotification("Registros cargados correctamente", "info");
+      } catch (error) {
+        console.error("Error al cargar registros:", error);
+        showNotification("Error al cargar los registros", "error");
+      }
+    };
+    // Método para abrir modal de Cliente
     const openClientModal = (cliente) => {
+      // Solo admin puede abrir modal de clientes
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       if (cliente) {
         currentCliente.value = { ...cliente };
         isEditingClient.value = true;
@@ -1340,7 +1344,14 @@ export default {
       showClientModal.value = true;
     };
 
+    // Guardar Cliente
     const saveCliente = async () => {
+      // Solo admin puede crear/editar clientes
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       try {
         const url = isEditingClient.value
           ? `http://152.228.135.50:5006/api/Cliente/${currentCliente.value.id_Cliente}`
@@ -1382,34 +1393,54 @@ export default {
       }
     };
 
+    // Método para cerrar modal de Cliente
     const closeClientModal = () => {
       showClientModal.value = false;
     };
 
-    // Métodos para Tipos de Servicio
-    const fetchTiposServicios = async () => {
+    // Eliminar Cliente
+    const deleteCliente = async (id) => {
+      // Solo admin puede eliminar clientes
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       try {
+        const clienteToDelete = clientes.value.find((c) => c.id_Cliente === id);
+        const clienteName = clienteToDelete
+          ? clienteToDelete.nombre_Empresa
+          : "desconocido";
+
         const response = await fetch(
-          "http://152.228.135.50:5006/api/TipoServicio",
+          `http://152.228.135.50:5006/api/Cliente/${id}`,
           {
-            method: "GET",
+            method: "DELETE",
             headers: { accept: "*/*" },
           }
         );
 
         if (!response.ok) {
-          throw new Error("No se pudieron cargar los tipos de servicio");
+          throw new Error("No se pudo eliminar el cliente");
         }
 
-        tiposServicios.value = await response.json();
-        showNotification("Tipos de servicio cargados correctamente", "info");
+        await fetchClientes();
+        const message = `Cliente "${clienteName}" eliminado con éxito`;
+        showNotification(message, "success");
       } catch (error) {
-        console.error("Error al cargar tipos de servicio:", error);
-        showNotification("Error al cargar los tipos de servicio", "error");
+        console.error("Error al eliminar cliente:", error);
+        showNotification("Error al eliminar el cliente", "error");
       }
     };
 
+    // Métodos para Tipos de Servicio (similar a clientes, pero solo para admin)
     const openTipoServicioModal = (tipoServicio) => {
+      // Solo admin puede abrir modal de tipos de servicio
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       if (tipoServicio) {
         currentTipoServicio.value = { ...tipoServicio };
         isEditingTipoServicio.value = true;
@@ -1424,6 +1455,12 @@ export default {
     };
 
     const saveTipoServicio = async () => {
+      // Solo admin puede crear/editar tipos de servicio
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       try {
         const url = isEditingTipoServicio.value
           ? `http://152.228.135.50:5006/api/TipoServicio/${currentTipoServicio.value.id_TipoServicio}`
@@ -1462,30 +1499,50 @@ export default {
       showTipoServicioModal.value = false;
     };
 
-    // Métodos para Registros
-    const fetchRegistros = async () => {
+    const deleteTipoServicio = async (id) => {
+      // Solo admin puede eliminar tipos de servicio
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       try {
+        const servicioToDelete = tiposServicios.value.find(
+          (s) => s.id_TipoServicio === id
+        );
+        const servicioName = servicioToDelete
+          ? servicioToDelete.nombre
+          : "desconocido";
+
         const response = await fetch(
-          "http://152.228.135.50:5006/api/Registro",
+          `http://152.228.135.50:5006/api/TipoServicio/${id}`,
           {
-            method: "GET",
+            method: "DELETE",
             headers: { accept: "*/*" },
           }
         );
 
         if (!response.ok) {
-          throw new Error("No se pudieron cargar los registros");
+          throw new Error("No se pudo eliminar el tipo de servicio");
         }
 
-        registros.value = await response.json();
-        showNotification("Registros cargados correctamente", "info");
+        await fetchTiposServicios();
+        const message = `Tipo de servicio "${servicioName}" eliminado con éxito`;
+        showNotification(message, "success");
       } catch (error) {
-        console.error("Error al cargar registros:", error);
-        showNotification("Error al cargar los registros", "error");
+        console.error("Error al eliminar tipo de servicio:", error);
+        showNotification("Error al eliminar el tipo de servicio", "error");
       }
     };
 
+    // Métodos para Registros
     const openRegistroModal = (registro) => {
+      // Solo admin puede abrir modal de registros
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       if (registro) {
         // Para edición: copiar todos los datos EXCEPTO la contraseña
         currentRegistro.value = {
@@ -1510,12 +1567,16 @@ export default {
     };
 
     const saveRegistro = async () => {
+      // Solo admin puede crear/editar registros
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       try {
         // Si estamos editando y no se proporcionó contraseña, evitamos enviarla
-        // para mantener la contraseña existente
         let registroData = { ...currentRegistro.value };
 
-        // Para crear un nuevo registro
         const url = isEditingRegistro.value
           ? `http://152.228.135.50:5006/api/Registro/${currentRegistro.value.id_Registro}`
           : "http://152.228.135.50:5006/api/Registro";
@@ -1571,88 +1632,13 @@ export default {
       showRegistroModal.value = false;
     };
 
-    // Métodos para eliminación
-    const confirmDelete = (type, id, name) => {
-      deleteType.value = type;
-      deleteItemId.value = id;
-      deleteItemName.value = name;
-      showDeleteConfirmModal.value = true;
-    };
-
-    const closeDeleteConfirmModal = () => {
-      showDeleteConfirmModal.value = false;
-    };
-
-    const executeDelete = async () => {
-      if (deleteType.value === "cliente") {
-        await deleteCliente(deleteItemId.value);
-      } else if (deleteType.value === "tipoServicio") {
-        await deleteTipoServicio(deleteItemId.value);
-      } else if (deleteType.value === "registro") {
-        await deleteRegistro(deleteItemId.value);
-      }
-      closeDeleteConfirmModal();
-    };
-
-    const deleteCliente = async (id) => {
-      try {
-        const clienteToDelete = clientes.value.find((c) => c.id_Cliente === id);
-        const clienteName = clienteToDelete
-          ? clienteToDelete.nombre_Empresa
-          : "desconocido";
-
-        const response = await fetch(
-          `http://152.228.135.50:5006/api/Cliente/${id}`,
-          {
-            method: "DELETE",
-            headers: { accept: "*/*" },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("No se pudo eliminar el cliente");
-        }
-
-        await fetchClientes();
-        const message = `Cliente "${clienteName}" eliminado con éxito`;
-        showNotification(message, "success");
-      } catch (error) {
-        console.error("Error al eliminar cliente:", error);
-        showNotification("Error al eliminar el cliente", "error");
-      }
-    };
-
-    const deleteTipoServicio = async (id) => {
-      try {
-        const servicioToDelete = tiposServicios.value.find(
-          (s) => s.id_TipoServicio === id
-        );
-        const servicioName = servicioToDelete
-          ? servicioToDelete.nombre
-          : "desconocido";
-
-        const response = await fetch(
-          `http://152.228.135.50:5006/api/TipoServicio/${id}`,
-          {
-            method: "DELETE",
-            headers: { accept: "*/*" },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("No se pudo eliminar el tipo de servicio");
-        }
-
-        await fetchTiposServicios();
-        const message = `Tipo de servicio "${servicioName}" eliminado con éxito`;
-        showNotification(message, "success");
-      } catch (error) {
-        console.error("Error al eliminar tipo de servicio:", error);
-        showNotification("Error al eliminar el tipo de servicio", "error");
-      }
-    };
-
     const deleteRegistro = async (id) => {
+      // Solo admin puede eliminar registros
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
       try {
         const response = await fetch(
           `http://152.228.135.50:5006/api/Registro/${id}`,
@@ -1675,10 +1661,162 @@ export default {
       }
     };
 
+    // Métodos de confirmación de eliminación
+    const confirmDelete = (type, id, name) => {
+      // Solo admin puede confirmar eliminación
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
+      deleteType.value = type;
+      deleteItemId.value = id;
+      deleteItemName.value = name;
+      showDeleteConfirmModal.value = true;
+    };
+
+    const closeDeleteConfirmModal = () => {
+      showDeleteConfirmModal.value = false;
+    };
+
+    const executeDelete = async () => {
+      // Solo admin puede ejecutar eliminación
+      if (!isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
+      if (deleteType.value === "cliente") {
+        await deleteCliente(deleteItemId.value);
+      } else if (deleteType.value === "tipoServicio") {
+        await deleteTipoServicio(deleteItemId.value);
+      } else if (deleteType.value === "registro") {
+        await deleteRegistro(deleteItemId.value);
+      }
+      closeDeleteConfirmModal();
+    };
+
+    // Métodos de notificación
+    const showNotification = (message, type = "info") => {
+      const notification = {
+        message,
+        type,
+        id: Date.now(),
+      };
+
+      notifications.value.push(notification);
+
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        removeNotification(
+          notifications.value.findIndex((n) => n.id === notification.id)
+        );
+      }, 5000);
+    };
+
+    const removeNotification = (index) => {
+      if (index !== -1) {
+        notifications.value.splice(index, 1);
+      }
+    };
+
+    // Métodos de formateo y utilidades
+    const formatDate = (dateString) => {
+      if (!dateString) return "N/A";
+
+      return new Date(dateString).toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    };
+
+    const getTimeAgo = (dateString) => {
+      if (!dateString) return "N/A";
+
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return "Hoy";
+      if (diffDays === 1) return "Ayer";
+      if (diffDays < 30) return `Hace ${diffDays} días`;
+
+      const diffMonths = Math.floor(diffDays / 30);
+      if (diffMonths === 1) return "Hace 1 mes";
+      if (diffMonths < 12) return `Hace ${diffMonths} meses`;
+
+      const diffYears = Math.floor(diffMonths / 12);
+      if (diffYears === 1) return "Hace 1 año";
+      return `Hace ${diffYears} años`;
+    };
+
+    // Métodos de obtención de nombres
+    const getClienteName = (id) => {
+      if (!id) return "N/A";
+      const cliente = clientes.value.find((c) => c.id_Cliente == id);
+      return cliente ? cliente.nombre_Empresa : `Cliente #${id}`;
+    };
+
+    const getServicioName = (id) => {
+      if (!id) return "N/A";
+      const servicio = tiposServicios.value.find(
+        (s) => s.id_TipoServicio == id
+      );
+      return servicio ? servicio.nombre : `Servicio #${id}`;
+    };
+
+    // Métodos de iniciales y avatares
+    const getInitials = () => {
+      if (!username.value) return "A";
+      return username.value.charAt(0).toUpperCase();
+    };
+
+    const getCompanyInitial = (name) => {
+      if (!name) return "E";
+      return name.charAt(0).toUpperCase();
+    };
+
+    const getServiceInitial = (name) => {
+      if (!name) return "S";
+      return name.charAt(0).toUpperCase();
+    };
+
+    const getUserInitial = (name) => {
+      if (!name) return "U";
+      return name.charAt(0).toUpperCase();
+    };
+
+    // Métodos de conteo
+    const getRecentClientsCount = () => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      return clientes.value.filter((cliente) => {
+        const registrationDate = new Date(cliente.fechaRegistro);
+        return registrationDate >= thirtyDaysAgo;
+      }).length;
+    };
+
+    const getTodayRegistrosCount = () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      return registros.value.filter((registro) => {
+        if (!registro.fechaCreacion) return false;
+        const registroDate = new Date(registro.fechaCreacion);
+        registroDate.setHours(0, 0, 0, 0);
+        return registroDate.getTime() === today.getTime();
+      }).length;
+    };
+
     // Método de logout
     const logout = () => {
       localStorage.removeItem("userToken");
       localStorage.removeItem("username");
+      localStorage.removeItem("esAdmin");
+      localStorage.removeItem("clientesAutorizados");
       router.push("/");
     };
 
@@ -1689,13 +1827,15 @@ export default {
       fetchRegistros();
     });
 
+    // Retornar todas las variables y métodos necesarios
     return {
-      // Estado
+      // Estado de la aplicación
       sections,
       activeSection,
       searchQuery,
       username,
       notifications,
+      isAdmin,
 
       // Clientes
       clientes,
@@ -1706,6 +1846,7 @@ export default {
       openClientModal,
       saveCliente,
       closeClientModal,
+      deleteCliente,
 
       // Tipos de Servicio
       tiposServicios,
@@ -1716,6 +1857,7 @@ export default {
       openTipoServicioModal,
       saveTipoServicio,
       closeTipoServicioModal,
+      deleteTipoServicio,
 
       // Registros
       registros,
@@ -1729,14 +1871,13 @@ export default {
       openRegistroModal,
       saveRegistro,
       closeRegistroModal,
-      getClienteName,
-      getServicioName,
+      deleteRegistro,
 
       // Modal de confirmación
       showDeleteConfirmModal,
       deleteItemName,
-      closeDeleteConfirmModal,
       confirmDelete,
+      closeDeleteConfirmModal,
       executeDelete,
 
       // Utilidades
@@ -1746,6 +1887,8 @@ export default {
       getCompanyInitial,
       getServiceInitial,
       getUserInitial,
+      getClienteName,
+      getServicioName,
       getRecentClientsCount,
       getTodayRegistrosCount,
       showNotification,
