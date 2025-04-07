@@ -1,4 +1,3 @@
-<!-- Template con filtros corregidos y permisos de administrador -->
 <template>
   <div class="dashboard-container">
     <!-- Sidebar -->
@@ -1019,6 +1018,7 @@
     </main>
   </div>
 </template>
+
 <script>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
@@ -1900,7 +1900,7 @@ export default {
   },
 };
 </script>
-<!-- Estilos Completos con Registros - DashboardView.vue */ -->
+
 <style scoped>
 /* Estilos Generales */
 * {
