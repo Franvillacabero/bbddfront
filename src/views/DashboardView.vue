@@ -73,7 +73,7 @@ export default {
 
     // Estado para Registros
     const registros = ref([]);
-    const registrosDesencriptados = ref([]); // Nuevo estado para almacenar registros con contraseñas desencriptadas
+    const registrosDesencriptados = ref([]); // Estado para almacenar registros con contraseñas desencriptadas
     const registroTipoServicioFiltro = ref("todos");
     const registroClienteFiltro = ref("todos");
     const registroOrden = ref("newest");
@@ -85,13 +85,238 @@ export default {
       id_TipoServicio: "",
       usuario: "",
       contraseña: "",
-      contraseñaDesencriptada: "", // Nuevo campo para la contraseña desencriptada
+      contraseñaDesencriptada: "", // Campo para la contraseña desencriptada
       notas: "",
       fechaCreacion: new Date().toISOString(),
     });
 
     // Estado para mostrar/ocultar contraseñas
     const passwordVisibility = ref({});
+
+    // Estado para registros seleccionados
+    const selectedRegistros = ref([]);
+
+    // Método para seleccionar/deseleccionar todos los registros
+    const toggleSelectAllRegistros = () => {
+      if (selectedRegistros.value.length === filteredRegistros.value.length) {
+        // Si todos están seleccionados, deseleccionar todos
+        selectedRegistros.value = [];
+      } else {
+        // Si no todos están seleccionados, seleccionar todos los filtrados
+        selectedRegistros.value = filteredRegistros.value.map(
+          (registro) => registro.id_Registro
+        );
+      }
+    };
+
+    // Método para verificar si todos los registros están seleccionados
+    const allRegistrosSelected = computed(() => {
+      return (
+        filteredRegistros.value.length > 0 &&
+        selectedRegistros.value.length === filteredRegistros.value.length
+      );
+    });
+
+    // Método para exportar registros seleccionados a Excel
+    const exportToExcel = async () => {
+      try {
+        if (selectedRegistros.value.length === 0) {
+          showNotification(
+            "Selecciona al menos un registro para exportar",
+            "warning"
+          );
+          return;
+        }
+
+        // Obtener registros seleccionados
+        const registrosToExport = registrosDesencriptados.value.filter(
+          (registro) => selectedRegistros.value.includes(registro.id_Registro)
+        );
+
+        // Si se requieren contraseñas desencriptadas, obtenerlas
+        const registrosConPassword = await Promise.all(
+          registrosToExport.map(async (registro) => {
+            // Si ya tiene contraseña desencriptada, usarla
+            if (registro.contraseñaDesencriptada) {
+              return { ...registro };
+            }
+
+            // Si no tiene contraseña desencriptada, obtenerla
+            try {
+              const response = await fetch(
+                `http://152.228.135.50:5006/api/Registro/decrypt/${registro.id_Registro}`,
+                {
+                  method: "GET",
+                  headers: { accept: "*/*" },
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error("No se pudo obtener la contraseña");
+              }
+
+              const decryptedPassword = await response.text();
+              return {
+                ...registro,
+                contraseñaDesencriptada: decryptedPassword,
+              };
+            } catch (error) {
+              console.error("Error al obtener contraseña:", error);
+              return {
+                ...registro,
+                contraseñaDesencriptada: "[Error al desencriptar]",
+              };
+            }
+          })
+        );
+
+        // Preparar datos para exportar
+        const excelData = registrosConPassword.map((registro) => ({
+          Cliente: getClienteName(registro.id_Cliente),
+          Servicio: getServicioName(registro.id_TipoServicio),
+          Usuario: registro.usuario,
+          Contraseña: registro.contraseñaDesencriptada,
+          Notas: registro.notas || "",
+          Fecha: formatDate(registro.fechaCreacion),
+        }));
+
+        // Crear workbook y worksheet
+        import("xlsx")
+          .then((XLSX) => {
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Registros");
+
+            // Guardar archivo
+            XLSX.writeFile(
+              workbook,
+              `registros_netymedia_${
+                new Date().toISOString().split("T")[0]
+              }.xlsx`
+            );
+
+            showNotification(
+              `${selectedRegistros.value.length} registros exportados con éxito`,
+              "success"
+            );
+          })
+          .catch((error) => {
+            console.error("Error al cargar la librería XLSX:", error);
+            showNotification("Error al exportar los registros", "error");
+          });
+      } catch (error) {
+        console.error("Error al exportar a Excel:", error);
+        showNotification(
+          "Error al exportar los registros: " + error.message,
+          "error"
+        );
+      }
+    };
+
+    // Método para copiar registros seleccionados al portapapeles
+    const copySelectedRegistros = async () => {
+      try {
+        if (selectedRegistros.value.length === 0) {
+          showNotification(
+            "Selecciona al menos un registro para copiar",
+            "warning"
+          );
+          return;
+        }
+
+        // Obtener registros seleccionados
+        const registrosToExport = registrosDesencriptados.value.filter(
+          (registro) => selectedRegistros.value.includes(registro.id_Registro)
+        );
+
+        // Si se requieren contraseñas desencriptadas, obtenerlas
+        const registrosConPassword = await Promise.all(
+          registrosToExport.map(async (registro) => {
+            // Si ya tiene contraseña desencriptada, usarla
+            if (registro.contraseñaDesencriptada) {
+              return { ...registro };
+            }
+
+            // Si no tiene contraseña desencriptada, obtenerla
+            try {
+              const response = await fetch(
+                `http://152.228.135.50:5006/api/Registro/decrypt/${registro.id_Registro}`,
+                {
+                  method: "GET",
+                  headers: { accept: "*/*" },
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error("No se pudo obtener la contraseña");
+              }
+
+              const decryptedPassword = await response.text();
+              return {
+                ...registro,
+                contraseñaDesencriptada: decryptedPassword,
+              };
+            } catch (error) {
+              console.error("Error al obtener contraseña:", error);
+              return {
+                ...registro,
+                contraseñaDesencriptada: "[Error al desencriptar]",
+              };
+            }
+          })
+        );
+
+        // Formatear datos para portapapeles
+        let clipboardText =
+          "Cliente\tServicio\tUsuario\tContraseña\tNotas\tFecha\n";
+
+        registrosConPassword.forEach((registro) => {
+          clipboardText += `${getClienteName(registro.id_Cliente)}\t`;
+          clipboardText += `${getServicioName(registro.id_TipoServicio)}\t`;
+          clipboardText += `${registro.usuario}\t`;
+          clipboardText += `${registro.contraseñaDesencriptada}\t`;
+          clipboardText += `${registro.notas || ""}\t`;
+          clipboardText += `${formatDate(registro.fechaCreacion)}\n`;
+        });
+
+        // Método alternativo de copia
+        const copyText = (text) => {
+          // Método 1: Usar navigator.clipboard si está disponible
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+          }
+
+          // Método 2: Usar selección y comando exec
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.select();
+
+          try {
+            const successful = document.execCommand("copy");
+            document.body.removeChild(textArea);
+            return successful
+              ? Promise.resolve()
+              : Promise.reject(new Error("Copying failed"));
+          } catch (err) {
+            document.body.removeChild(textArea);
+            return Promise.reject(err);
+          }
+        };
+
+        await copyText(clipboardText);
+        showNotification(
+          `${selectedRegistros.value.length} registros copiados al portapapeles`,
+          "success"
+        );
+      } catch (error) {
+        console.error("Error al copiar registros:", error);
+        showNotification(
+          "Error al copiar los registros: " + error.message,
+          "error"
+        );
+      }
+    };
 
     // Función para alternar la visibilidad de contraseñas individualmente
     const togglePasswordVisibility = async (registroId) => {
@@ -1050,6 +1275,13 @@ export default {
 
       // Logout
       logout,
+
+      // Nuevas funcionalidades de selección y exportación
+      selectedRegistros,
+      toggleSelectAllRegistros,
+      allRegistrosSelected,
+      exportToExcel,
+      copySelectedRegistros,
     };
   },
 };
@@ -1585,12 +1817,78 @@ export default {
                 <option value="oldest">Más antiguos primero</option>
               </select>
             </div>
+
+            <!-- Nuevos botones para exportar y copiar -->
+            <div class="action-buttons-container">
+              <button
+                @click="exportToExcel"
+                class="action-button-main export-button"
+                title="Exportar seleccionados a Excel"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M12 2v15M5 9l7 7 7-7M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"
+                  ></path>
+                </svg>
+                <span>Exportar</span>
+                <span class="selected-count" v-if="selectedRegistros.length > 0"
+                  >({{ selectedRegistros.length }})</span
+                >
+              </button>
+              <button
+                @click="copySelectedRegistros"
+                class="action-button-main copy-all-button"
+                title="Copiar seleccionados al portapapeles"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path
+                    d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                  ></path>
+                </svg>
+                <span>Copiar</span>
+                <span class="selected-count" v-if="selectedRegistros.length > 0"
+                  >({{ selectedRegistros.length }})</span
+                >
+              </button>
+            </div>
           </div>
 
           <div class="table-container">
             <table class="data-table logs-table">
               <thead>
                 <tr>
+                  <th class="column-checkbox">
+                    <div class="checkbox-container">
+                      <input
+                        type="checkbox"
+                        id="selectAllCheckbox"
+                        :checked="allRegistrosSelected"
+                        @change="toggleSelectAllRegistros"
+                        class="custom-checkbox"
+                      />
+                      <label
+                        for="selectAllCheckbox"
+                        class="checkbox-label"
+                      ></label>
+                    </div>
+                  </th>
                   <th class="column-client">Cliente</th>
                   <th class="column-service">Servicio</th>
                   <th class="column-user">Usuario</th>
@@ -1605,7 +1903,27 @@ export default {
                   v-for="registro in filteredRegistros"
                   :key="registro.id_Registro"
                   class="data-row"
+                  :class="{
+                    'row-selected': selectedRegistros.includes(
+                      registro.id_Registro
+                    ),
+                  }"
                 >
+                  <td class="column-checkbox">
+                    <div class="checkbox-container">
+                      <input
+                        type="checkbox"
+                        :id="`checkbox-${registro.id_Registro}`"
+                        v-model="selectedRegistros"
+                        :value="registro.id_Registro"
+                        class="custom-checkbox"
+                      />
+                      <label
+                        :for="`checkbox-${registro.id_Registro}`"
+                        class="checkbox-label"
+                      ></label>
+                    </div>
+                  </td>
                   <td class="column-client">
                     <span class="registro-desc">{{
                       getClienteName(registro.id_Cliente)
@@ -1781,7 +2099,7 @@ export default {
                   </td>
                 </tr>
                 <tr v-if="filteredRegistros.length === 0" class="empty-row">
-                  <td :colspan="isAdmin ? 7 : 6" class="empty-message">
+                  <td :colspan="isAdmin ? 8 : 7" class="empty-message">
                     <div class="empty-content">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -3116,6 +3434,145 @@ export default {
   /* Aquí puedes decidir ocultar algunas columnas menos importantes si es necesario */
   .column-notes {
     display: none !important;
+  }
+}
+
+/* Estilos para los botones de exportar y copiar */
+.action-buttons-container {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.action-button-main {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff;
+}
+
+.action-button-main svg {
+  margin-right: 8px;
+}
+
+.export-button {
+  background-color: #27ae60;
+}
+
+.export-button:hover {
+  background-color: #219653;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.copy-all-button {
+  background-color: #3498db;
+}
+
+.copy-all-button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.selected-count {
+  margin-left: 5px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* Estilos para los checkboxes */
+.column-checkbox {
+  width: 40px;
+  text-align: center;
+}
+
+.checkbox-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-checkbox {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-label {
+  position: relative;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  background-color: #fff;
+  border: 2px solid #dee2e6;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:checked + .checkbox-label {
+  background-color: #c1272d;
+  border-color: #c1272d;
+}
+
+.custom-checkbox:checked + .checkbox-label:after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox:focus + .checkbox-label {
+  box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
+}
+
+/* Resaltar filas seleccionadas */
+.row-selected {
+  background-color: rgba(193, 39, 45, 0.05);
+}
+
+.row-selected:hover {
+  background-color: rgba(193, 39, 45, 0.08);
+}
+
+/* Ajustes para responsive */
+@media (max-width: 1024px) {
+  .filter-controls {
+    flex-wrap: wrap;
+  }
+
+  .action-buttons-container {
+    margin-top: 10px;
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-button-main {
+    padding: 8px 12px;
+  }
+
+  .action-button-main span:not(.selected-count) {
+    display: none;
+  }
+
+  .action-button-main svg {
+    margin-right: 0;
   }
 }
 </style>
