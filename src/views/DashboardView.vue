@@ -959,7 +959,7 @@ export default {
 
     // Método de logout
     const logout = () => {
-      localStorage.removeItem("userToken");
+      localStorage.removeItem("token");
       localStorage.removeItem("username");
       localStorage.removeItem("esAdmin");
       localStorage.removeItem("clientesAutorizados");

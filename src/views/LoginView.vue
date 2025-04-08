@@ -218,7 +218,7 @@ export default {
           loginTracker.recordAttempt(credentials.nombre, true);
 
           // Store user information
-          localStorage.setItem("userToken", "admin-token");
+          localStorage.setItem("token", "admin-token");
           localStorage.setItem("username", usuarioValido.nombre);
           localStorage.setItem("esAdmin", usuarioValido.esAdmin);
           localStorage.setItem(
