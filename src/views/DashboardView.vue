@@ -390,18 +390,43 @@ export default {
     };
 
     // Método para copiar contraseña al portapapeles
-    const copyToClipboard = (text) => {
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {
-          showNotification("Contraseña copiada al portapapeles", "success");
-        })
-        .catch((err) => {
-          console.error("Error al copiar", err);
-          showNotification("Error al copiar la contraseña", "error");
-        });
-    };
+    const copyToClipboard = async (registroId) => {
+      try {
+        // Primero, verificar si ya tenemos la contraseña desencriptada
+        const registro = registrosDesencriptados.value.find(
+          (r) => r.id_Registro === registroId
+        );
 
+        let passwordToCopy;
+
+        if (registro && registro.contraseñaDesencriptada) {
+          // Si ya tenemos la contraseña desencriptada, usarla
+          passwordToCopy = registro.contraseñaDesencriptada;
+        } else {
+          // Si no, hacer una llamada al backend para desencriptar
+          const response = await fetch(
+            `http://152.228.135.50:5006/api/Registro/decrypt/${registroId}`,
+            {
+              method: "GET",
+              headers: { accept: "*/*" },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("No se pudo obtener la contraseña");
+          }
+
+          passwordToCopy = await response.text();
+        }
+
+        // Copiar al portapapeles
+        await navigator.clipboard.writeText(passwordToCopy);
+        showNotification("Contraseña copiada al portapapeles", "success");
+      } catch (error) {
+        console.error("Error al copiar contraseña:", error);
+        showNotification("Error al copiar la contraseña", "error");
+      }
+    };
     // Método para abrir modal de Cliente
     const openClientModal = (cliente) => {
       // Solo admin puede abrir modal de clientes
@@ -1630,9 +1655,7 @@ export default {
 
                         <!-- Botón para copiar contraseña -->
                         <button
-                          @click="
-                            copyToClipboard(registro.contraseñaDesencriptada)
-                          "
+                          @click="copyToClipboard(registro.id_Registro)"
                           class="copy-button"
                           title="Copiar contraseña"
                         >
