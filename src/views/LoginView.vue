@@ -191,54 +191,49 @@ export default {
         // Start loading
         isLoading.value = true;
 
-        // Fetch users
-        const usuariosResponse = await fetch(
-          "http://152.228.135.50:5006/api/Usuario",
+        // Hacer login con el backend
+        const loginResponse = await fetch(
+          "http://152.228.135.50:5006/api/Usuario/login",
           {
-            method: "GET",
-            headers: { accept: "*/*" },
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              nombre: credentials.nombre,
+              contraseña: credentials.contraseña,
+            }),
           }
         );
 
-        if (!usuariosResponse.ok) {
-          throw new Error("No se pudo obtener la lista de usuarios");
+        if (!loginResponse.ok) {
+          loginTracker.recordAttempt(credentials.nombre, false);
+          const errMsg =
+            (await loginResponse.json())?.mensaje || "Error de login";
+          throw new Error(errMsg);
         }
 
-        const usuarios = await usuariosResponse.json();
+        const usuarioValido = await loginResponse.json();
 
-        // Find user
-        const usuarioValido = usuarios.find(
-          (usuario) =>
-            usuario.nombre === credentials.nombre &&
-            bcrypt.compareSync(credentials.contraseña, usuario.contraseña)
+        // Login exitoso
+        loginTracker.recordAttempt(credentials.nombre, true);
+
+        // Guardar información del usuario
+        localStorage.setItem("token", "admin-token");
+        localStorage.setItem("username", usuarioValido.nombre);
+        localStorage.setItem("esAdmin", usuarioValido.esAdmin || false);
+        localStorage.setItem(
+          "clientesAutorizados",
+          JSON.stringify(usuarioValido.clientes || [])
         );
 
-        if (usuarioValido) {
-          // Successful login
-          loginTracker.recordAttempt(credentials.nombre, true);
-
-          // Store user information
-          localStorage.setItem("token", "admin-token");
-          localStorage.setItem("username", usuarioValido.nombre);
-          localStorage.setItem("esAdmin", usuarioValido.esAdmin);
-          localStorage.setItem(
-            "clientesAutorizados",
-            JSON.stringify(usuarioValido.clientes || [])
-          );
-
-          // Navigate to dashboard
-          router.push("/dashboard");
-        } else {
-          // Failed login
-          loginTracker.recordAttempt(credentials.nombre, false);
-          throw new Error("Credenciales incorrectas");
-        }
+        // Redirigir al dashboard
+        router.push("/dashboard");
       } catch (err) {
-        // Handle errors
+        // Manejar errores
         error.value =
           err.message || "Error inesperado. Por favor, contacta soporte.";
 
-        // Log failed attempt details
         console.error({
           message: "Login failed",
           error: err.message,
@@ -246,7 +241,6 @@ export default {
           username: credentials.nombre,
         });
       } finally {
-        // Always stop loading
         isLoading.value = false;
       }
     };
