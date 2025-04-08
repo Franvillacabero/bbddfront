@@ -13,6 +13,7 @@ const routes: Array<RouteRecordRaw> = [
     path: "/dashboard",
     name: "Dashboard",
     component: DashboardView,
+    meta: { requiresAuth: true },
   },
 ];
 
@@ -23,7 +24,7 @@ const router = createRouter({
 
 // Guardia de navegación
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem("userToken");
+  const isAuthenticated = !!localStorage.getItem("token");
 
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!isAuthenticated) {
