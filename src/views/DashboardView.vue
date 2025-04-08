@@ -392,39 +392,67 @@ export default {
     // Método para copiar contraseña al portapapeles
     const copyToClipboard = async (registroId) => {
       try {
-        // Primero, verificar si ya tenemos la contraseña desencriptada
+        // Buscar el registro
         const registro = registrosDesencriptados.value.find(
           (r) => r.id_Registro === registroId
         );
 
-        let passwordToCopy;
+        let textToCopy;
 
-        if (registro && registro.contraseñaDesencriptada) {
-          // Si ya tenemos la contraseña desencriptada, usarla
-          passwordToCopy = registro.contraseñaDesencriptada;
-        } else {
-          // Si no, hacer una llamada al backend para desencriptar
+        // Si no hay contraseña desencriptada, hacer fetch
+        if (!registro || !registro.contraseñaDesencriptada) {
           const response = await fetch(
             `http://152.228.135.50:5006/api/Registro/decrypt/${registroId}`,
             {
               method: "GET",
-              headers: { accept: "*/*" },
+              headers: {
+                accept: "*/*",
+                "Content-Type": "application/json",
+              },
             }
           );
 
           if (!response.ok) {
-            throw new Error("No se pudo obtener la contraseña");
+            const errorText = await response.text();
+            throw new Error(`No se pudo obtener la contraseña: ${errorText}`);
           }
 
-          passwordToCopy = await response.text();
+          textToCopy = await response.text();
+        } else {
+          textToCopy = registro.contraseñaDesencriptada;
         }
 
-        // Copiar al portapapeles
-        await navigator.clipboard.writeText(passwordToCopy);
+        // Método de copia alternativo
+        const copyText = (text) => {
+          // Método 1: Usar navigator.clipboard si está disponible
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+          }
+
+          // Método 2: Usar selección y comando exec
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.select();
+
+          try {
+            const successful = document.execCommand("copy");
+            document.body.removeChild(textArea);
+            return successful
+              ? Promise.resolve()
+              : Promise.reject(new Error("Copying failed"));
+          } catch (err) {
+            document.body.removeChild(textArea);
+            return Promise.reject(err);
+          }
+        };
+
+        // Intentar copiar
+        await copyText(textToCopy);
         showNotification("Contraseña copiada al portapapeles", "success");
       } catch (error) {
-        console.error("Error al copiar contraseña:", error);
-        showNotification("Error al copiar la contraseña", "error");
+        console.error("Error al copiar:", error);
+        showNotification(`Error al copiar: ${error.message}`, "error");
       }
     };
     // Método para abrir modal de Cliente
