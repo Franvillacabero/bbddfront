@@ -2836,6 +2836,7 @@ export default {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+  margin: 15px;
 }
 
 .modal-button {
