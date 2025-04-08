@@ -664,6 +664,11 @@ export default {
 
         const method = isEditingRegistro.value ? "PUT" : "POST";
 
+        // Si estamos creando un nuevo registro, establecer id_Registro a 0
+        if (!isEditingRegistro.value) {
+          registroData.id_Registro = 0;
+        }
+
         // Si estamos editando y no se proporcionó contraseña, la eliminamos del objeto
         // para que el backend mantenga la contraseña actual
         if (isEditingRegistro.value && !registroData.contraseña) {
@@ -677,6 +682,9 @@ export default {
         registroData.id_Cliente = parseInt(registroData.id_Cliente);
         registroData.id_TipoServicio = parseInt(registroData.id_TipoServicio);
 
+        // Asegurar que la fecha de creación esté en formato ISO
+        registroData.fechaCreacion = new Date().toISOString();
+
         const response = await fetch(url, {
           method: method,
           headers: {
@@ -687,7 +695,8 @@ export default {
         });
 
         if (!response.ok) {
-          throw new Error("Error al guardar el registro");
+          const errorText = await response.text();
+          throw new Error(`Error al guardar el registro: ${errorText}`);
         }
 
         await fetchRegistros();
