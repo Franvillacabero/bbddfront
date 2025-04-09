@@ -1127,3 +1127,81 @@
   visibility: visible;
   opacity: 1;
 }
+/* Estilos para el generador de contraseñas */
+.password-input-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.password-input {
+  flex-grow: 1;
+  padding-right: 45px; /* Espacio para el botón */
+}
+
+.generate-password-button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background-color: transparent;
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  height: 36px;
+  width: 36px;
+}
+
+.generate-password-button:hover {
+  background-color: rgba(193, 39, 45, 0.1);
+  color: #c1272d;
+}
+
+.generate-password-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Estilos para el indicador de fortaleza de contraseña */
+.password-strength {
+  margin-top: 8px;
+  font-size: 12px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: #e9ecef;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.password-strength-indicator {
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.password-strength-weak {
+  width: 33%;
+  background-color: #e74c3c;
+}
+
+.password-strength-medium {
+  width: 66%;
+  background-color: #f39c12;
+}
+
+.password-strength-strong {
+  width: 100%;
+  background-color: #2ecc71;
+}
+
+.password-strength-text {
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
+  color: #6c757d;
+}

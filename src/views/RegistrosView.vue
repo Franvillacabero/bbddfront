@@ -65,6 +65,53 @@ export default {
       }
     };
 
+    // Generador de contraseñas seguras
+    const generateSecurePassword = () => {
+      const length = 18; // Aumentamos la longitud para mayor seguridad
+      const uppercaseChars = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // Sin I y O para evitar confusión
+      const lowercaseChars = "abcdefghijkmnpqrstuvwxyz"; // Sin l y o para evitar confusión
+      const numberChars = "23456789"; // Sin 0 y 1 para evitar confusión
+
+      // Removidos los símbolos especiales
+      const allChars = uppercaseChars + lowercaseChars + numberChars;
+
+      // Asegurar que hay varios caracteres de cada categoría
+      let password = "";
+
+      // Añadir 4 mayúsculas para aumentar la seguridad
+      for (let i = 0; i < 4; i++) {
+        password += uppercaseChars.charAt(
+          Math.floor(Math.random() * uppercaseChars.length)
+        );
+      }
+
+      // Añadir 4 números para aumentar la seguridad
+      for (let i = 0; i < 4; i++) {
+        password += numberChars.charAt(
+          Math.floor(Math.random() * numberChars.length)
+        );
+      }
+
+      // Completar la contraseña hasta la longitud deseada con minúsculas principalmente
+      for (let i = password.length; i < length; i++) {
+        password += lowercaseChars.charAt(
+          Math.floor(Math.random() * lowercaseChars.length)
+        );
+      }
+
+      // Mezclar los caracteres para evitar un patrón predecible
+      password = password
+        .split("")
+        .sort(() => 0.5 - Math.random())
+        .join("");
+
+      // Actualizar el estado
+      currentRegistro.value.contraseña = password;
+
+      // Mostrar notificación
+      showNotification("Contraseña segura generada", "success");
+    };
+
     // Cargar clientes y tipos de servicio
     const fetchClientes = async () => {
       try {
@@ -932,6 +979,7 @@ export default {
       exportToExcel,
       copySelectedRegistros,
       toggleSelectAllRegistros,
+      generateSecurePassword,
 
       // Utilidades
       formatDate,
@@ -1470,14 +1518,35 @@ export default {
 
           <div class="form-group">
             <label for="password">Contraseña</label>
-            <input
-              id="password"
-              v-model="currentRegistro.contraseña"
-              type="password"
-              placeholder="Ingrese la contraseña"
-              :required="!isEditingRegistro"
-              class="form-input"
-            />
+            <div class="password-input-group">
+              <input
+                id="password"
+                v-model="currentRegistro.contraseña"
+                type="text"
+                placeholder="Ingrese la contraseña"
+                :required="!isEditingRegistro"
+                class="form-input password-input"
+              />
+              <button
+                type="button"
+                @click="generateSecurePassword"
+                class="generate-password-button"
+                title="Generar contraseña segura"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M19 7l-7 5-7-5"></path>
+                  <path d="M19 12l-7 5-7-5"></path>
+                </svg>
+              </button>
+            </div>
             <small v-if="isEditingRegistro" class="form-hint"
               >Dejar en blanco para mantener la contraseña actual</small
             >
@@ -1631,6 +1700,42 @@ export default {
 </template>
 
 <style scoped>
-/* Use the existing styles from the global layout */
-/* Any component-specific styles can be added here if needed */
+/* Estilos para el generador de contraseñas */
+.password-input-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.password-input {
+  flex-grow: 1;
+  padding-right: 45px; /* Espacio para el botón */
+}
+
+.generate-password-button {
+  position: absolute;
+  right: 10px;
+  border: none;
+  background-color: transparent;
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  height: 36px;
+  width: 36px;
+}
+
+.generate-password-button:hover {
+  background-color: rgba(193, 39, 45, 0.1);
+  color: #c1272d;
+}
+
+.generate-password-button svg {
+  width: 18px;
+  height: 18px;
+}
 </style>
