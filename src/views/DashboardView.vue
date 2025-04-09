@@ -318,6 +318,48 @@ export default {
       }
     };
 
+    // Método para copiar usuario al portapapeles
+    const copyUsernameToClipboard = async (username) => {
+      try {
+        if (!username) {
+          showNotification("No hay usuario para copiar", "warning");
+          return;
+        }
+
+        // Método de copia alternativo
+        const copyText = (text) => {
+          // Método 1: Usar navigator.clipboard si está disponible
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+          }
+
+          // Método 2: Usar selección y comando exec
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.select();
+
+          try {
+            const successful = document.execCommand("copy");
+            document.body.removeChild(textArea);
+            return successful
+              ? Promise.resolve()
+              : Promise.reject(new Error("Copying failed"));
+          } catch (err) {
+            document.body.removeChild(textArea);
+            return Promise.reject(err);
+          }
+        };
+
+        // Intentar copiar
+        await copyText(username);
+        showNotification("Usuario copiado al portapapeles", "success");
+      } catch (error) {
+        console.error("Error al copiar:", error);
+        showNotification(`Error al copiar: ${error.message}`, "error");
+      }
+    };
+
     // Función para alternar la visibilidad de contraseñas individualmente
     const togglePasswordVisibility = async (registroId) => {
       if (!passwordVisibility.value[registroId]) {
@@ -1122,7 +1164,6 @@ export default {
       if (diffYears === 1) return "Hace 1 año";
       return `Hace ${diffYears} años`;
     };
-
     // Métodos de obtención de nombres
     const getClienteName = (id) => {
       if (!id) return "N/A";
@@ -1247,6 +1288,7 @@ export default {
       closeRegistroModal,
       deleteRegistro,
       copyToClipboard,
+      copyUsernameToClipboard, // Nuevo método para copiar nombre de usuario
 
       // Visibilidad de contraseñas
       passwordVisibility,
@@ -1940,6 +1982,33 @@ export default {
                         {{ getUserInitial(registro.usuario) }}
                       </div>
                       <span class="user-name-cell">{{ registro.usuario }}</span>
+                      <button
+                        @click="copyUsernameToClipboard(registro.usuario)"
+                        class="copy-button"
+                        title="Copiar usuario"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <rect
+                            x="9"
+                            y="9"
+                            width="13"
+                            height="13"
+                            rx="2"
+                            ry="2"
+                          ></rect>
+                          <path
+                            d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                          ></path>
+                        </svg>
+                      </button>
                     </div>
                   </td>
                   <td class="column-password">
@@ -3574,5 +3643,29 @@ export default {
   .action-button-main svg {
     margin-right: 0;
   }
+}
+
+/* Estilos para la celda de usuario */
+.user-info-cell {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.user-name-cell {
+  font-weight: 600;
+  margin-right: 8px;
+  flex-grow: 1;
+}
+
+.user-info-cell .copy-button {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.2s linear;
+}
+
+.user-info-cell:hover .copy-button {
+  visibility: visible;
+  opacity: 1;
 }
 </style>

@@ -44,37 +44,6 @@
         </button>
       </form>
     </div>
-
-    <!-- Multi-Factor Authentication Modal -->
-    <div v-if="showMFAModal" class="mfa-modal-backdrop">
-      <div class="mfa-modal-container">
-        <div class="mfa-modal-header">
-          <h2>Verificación en Dos Pasos</h2>
-          <button @click="closeMFAModal" class="mfa-modal-close">×</button>
-        </div>
-        <div class="mfa-modal-content">
-          <p>
-            Se ha enviado un código de verificación a tu correo electrónico.
-          </p>
-          <div class="form-group">
-            <label for="mfaCode">Código de Verificación</label>
-            <input
-              type="text"
-              id="mfaCode"
-              v-model="credentials.mfaCode"
-              placeholder="Ingresa el código de 6 dígitos"
-              maxlength="6"
-            />
-          </div>
-          <div v-if="error" class="error-message">
-            {{ error }}
-          </div>
-          <button @click="verifyMFACode" class="mfa-verify-button">
-            Verificar Código
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -376,64 +345,5 @@ input:focus {
 .login-button:disabled {
   background-color: #e0a0a4;
   cursor: not-allowed;
-}
-/* Multi-Factor Authentication Modal Styles */
-.mfa-modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.mfa-modal-container {
-  background-color: white;
-  border-radius: 10px;
-  width: 400px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.mfa-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.mfa-modal-header h2 {
-  margin: 0;
-  color: #c1272d;
-}
-
-.mfa-modal-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #6c757d;
-  cursor: pointer;
-}
-
-.mfa-modal-content p {
-  margin-bottom: 20px;
-  color: #6c757d;
-}
-
-.mfa-verify-button {
-  background-color: #c1272d;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 5px;
-  font-weight: bold;
-  width: 100%;
-  margin-top: 16px;
-  transition: background-color 0.3s ease;
 }
 </style>
