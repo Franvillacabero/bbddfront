@@ -2944,7 +2944,7 @@ export default {
 }
 
 .data-table td {
-  padding: 16px 24px;
+  padding: 16px 0px;
   border-bottom: 1px solid #dee2e6;
   font-size: 14px;
 }
