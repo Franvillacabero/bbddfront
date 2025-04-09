@@ -1,7 +1,9 @@
-// src/router/index.ts
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import LoginView from "@/views/LoginView.vue";
 import DashboardView from "@/views/DashboardView.vue";
+import ClientesView from "@/views/ClientesView.vue";
+import TiposServicioView from "@/views/TiposServicioView.vue";
+import RegistrosView from "@/views/RegistrosView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -11,9 +13,29 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: "/dashboard",
-    name: "Dashboard",
     component: DashboardView,
     meta: { requiresAuth: true },
+    children: [
+      {
+        path: "",
+        redirect: "/dashboard/clientes",
+      },
+      {
+        path: "clientes",
+        name: "Clientes",
+        component: ClientesView,
+      },
+      {
+        path: "tipos-servicio",
+        name: "TiposServicio",
+        component: TiposServicioView,
+      },
+      {
+        path: "registros",
+        name: "Registros",
+        component: RegistrosView,
+      },
+    ],
   },
 ];
 

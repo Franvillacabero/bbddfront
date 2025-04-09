@@ -50,7 +50,6 @@
 <script>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import bcrypt from "bcryptjs";
 
 export default {
   setup() {
