@@ -20,12 +20,20 @@ export default {
       id_Cliente: null,
       nombre_Empresa: "",
       fechaRegistro: new Date().toISOString(),
+      notas: "", // Añadimos el campo de notas
     });
 
     // Estado para modal de confirmación de eliminación
     const showDeleteConfirmModal = ref(false);
     const deleteItemId = ref(null);
     const deleteItemName = ref("");
+
+    // Estado para modal de visualización de notas
+    const showNotesModal = ref(false);
+    const viewingNotes = ref({
+      clienteName: "",
+      notes: "",
+    });
 
     // Cargar clientes
     const fetchClientes = async () => {
@@ -120,7 +128,8 @@ export default {
       return resultClientes.filter(
         (cliente) =>
           cliente.nombre_Empresa.toLowerCase().includes(query) ||
-          cliente.id_Cliente.toString().includes(query)
+          cliente.id_Cliente.toString().includes(query) ||
+          (cliente.notas && cliente.notas.toLowerCase().includes(query))
       );
     });
 
@@ -137,6 +146,7 @@ export default {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       return clientes.value.filter((cliente) => {
+        if (!cliente.fechaRegistro) return false;
         const registrationDate = new Date(cliente.fechaRegistro);
         return registrationDate >= thirtyDaysAgo;
       }).length;
@@ -197,10 +207,25 @@ export default {
           id_Cliente: null,
           nombre_Empresa: "",
           fechaRegistro: new Date().toISOString(),
+          notas: "", // Inicializamos el campo de notas
         };
         isEditingClient.value = false;
       }
       showClientModal.value = true;
+    };
+
+    // Método para abrir modal de visualización de notas
+    const openNotesModal = (cliente) => {
+      viewingNotes.value = {
+        clienteName: cliente.nombre_Empresa,
+        notes: cliente.notas || "Sin notas",
+      };
+      showNotesModal.value = true;
+    };
+
+    // Método para cerrar modal de visualización de notas
+    const closeNotesModal = () => {
+      showNotesModal.value = false;
     };
 
     // Guardar Cliente
@@ -223,6 +248,7 @@ export default {
           : {
               nombre_Empresa: currentCliente.value.nombre_Empresa,
               fechaRegistro: new Date().toISOString(),
+              notas: currentCliente.value.notas || "", // Incluimos las notas
             };
 
         const response = await fetch(url, {
@@ -258,7 +284,7 @@ export default {
     };
 
     // Eliminar Cliente
-    const deleteCliente = async (id) => {
+    const deleteCliente = async () => {
       // Solo admin puede eliminar clientes
       if (!props.isAdmin) {
         showNotification("No tienes permisos para esta acción", "error");
@@ -266,6 +292,15 @@ export default {
       }
 
       try {
+        // Obtenemos explícitamente el ID del estado reactivo
+        const id = deleteItemId.value;
+
+        if (!id) {
+          throw new Error("ID de cliente no válido");
+        }
+
+        console.log("Eliminando cliente con ID:", id);
+
         const clienteToDelete = clientes.value.find((c) => c.id_Cliente === id);
         const clienteName = clienteToDelete
           ? clienteToDelete.nombre_Empresa
@@ -284,14 +319,19 @@ export default {
         }
 
         await fetchClientes();
-        const message = `Cliente "${clienteName}" eliminado con éxito`;
-        showNotification(message, "success");
+        closeDeleteConfirmModal();
+        showNotification(
+          `Cliente "${clienteName}" eliminado con éxito`,
+          "success"
+        );
       } catch (error) {
         console.error("Error al eliminar cliente:", error);
-        showNotification("Error al eliminar el cliente", "error");
+        showNotification(
+          `Error al eliminar el cliente: ${error.message}`,
+          "error"
+        );
       }
     };
-
     // Método de confirmación de eliminación
     const confirmDelete = (id, name) => {
       // Solo admin puede confirmar eliminación
@@ -300,13 +340,19 @@ export default {
         return;
       }
 
-      deleteItemId.value = id;
+      // Asegurarse de que el ID es un número
+      deleteItemId.value = parseInt(id);
       deleteItemName.value = name;
       showDeleteConfirmModal.value = true;
     };
 
     const closeDeleteConfirmModal = () => {
       showDeleteConfirmModal.value = false;
+    };
+
+    // Verificar si un cliente tiene notas
+    const hasNotes = (cliente) => {
+      return cliente.notas && cliente.notas.trim() !== "";
     };
 
     // Cargar clientes al montar el componente
@@ -326,6 +372,8 @@ export default {
       showDeleteConfirmModal,
       deleteItemName,
       notifications,
+      showNotesModal,
+      viewingNotes,
 
       // Métodos
       openClientModal,
@@ -337,6 +385,9 @@ export default {
       fetchClientes,
       showNotification,
       removeNotification,
+      openNotesModal,
+      closeNotesModal,
+      hasNotes,
 
       // Utilidades
       formatDate,
@@ -446,6 +497,7 @@ export default {
           <tr>
             <th class="column-name">Nombre Empresa</th>
             <th class="column-date">Fecha Registro</th>
+            <th class="column-notes">Notas</th>
             <th v-if="isAdmin" class="column-actions">Acciones</th>
           </tr>
         </thead>
@@ -471,6 +523,39 @@ export default {
                 <span class="date-ago">
                   {{ getTimeAgo(cliente.fechaRegistro) }}
                 </span>
+              </div>
+            </td>
+            <td class="column-notes">
+              <div class="notes-cell">
+                <span class="notes-preview">
+                  {{
+                    cliente.notas
+                      ? cliente.notas.substring(0, 60) +
+                        (cliente.notas.length > 60 ? "..." : "")
+                      : "Sin notas"
+                  }}
+                </span>
+                <button
+                  v-if="hasNotes(cliente)"
+                  @click="openNotesModal(cliente)"
+                  class="view-notes-button"
+                  title="Ver notas completas"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                    ></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
               </div>
             </td>
             <td v-if="isAdmin" class="column-actions">
@@ -523,7 +608,7 @@ export default {
             </td>
           </tr>
           <tr v-if="filteredClientes.length === 0" class="empty-row">
-            <td :colspan="isAdmin ? 3 : 2" class="empty-message">
+            <td :colspan="isAdmin ? 4 : 3" class="empty-message">
               <div class="empty-content">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -581,6 +666,19 @@ export default {
             />
           </div>
 
+          <div class="form-group">
+            <label for="notas">Notas</label>
+            <textarea
+              id="notas"
+              v-model="currentCliente.notas"
+              placeholder="Ingrese notas sobre el cliente"
+              class="form-textarea"
+              rows="3"
+              maxlength="100"
+            ></textarea>
+            <small class="form-hint">Máximo 100 caracteres</small>
+          </div>
+
           <div class="modal-footer">
             <button
               type="button"
@@ -594,6 +692,39 @@ export default {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Modal para Ver Notas -->
+    <div v-if="showNotesModal" class="modal-backdrop">
+      <div class="modal-container notes-modal" @click.stop>
+        <div class="modal-header">
+          <h2>Notas de {{ viewingNotes.clienteName }}</h2>
+          <button @click="closeNotesModal" class="modal-close-button">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="notes-content">
+            {{ viewingNotes.notes }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeNotesModal" class="modal-button cancel-button">
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
 
@@ -649,10 +780,7 @@ export default {
           >
             Cancelar
           </button>
-          <button
-            @click="deleteCliente(deleteItemId)"
-            class="modal-button delete-button"
-          >
+          <button @click="deleteCliente" class="modal-button delete-button">
             Eliminar
           </button>
         </div>
@@ -721,10 +849,7 @@ export default {
 </template>
 
 <style scoped>
-/* You can add any component-specific styles here if needed */
-/* Most styles should already be in the main layout's CSS */
-
-/* Notifications Container */
+/* Estilos para las notificaciones */
 .notifications-container {
   position: fixed;
   top: 20px;
@@ -783,7 +908,7 @@ export default {
   opacity: 1;
 }
 
-/* Animations */
+/* Animaciones */
 @keyframes slideInRight {
   from {
     transform: translateX(100%);
@@ -792,6 +917,444 @@ export default {
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+/* Estilos para la celda de notas y botón de visualización */
+.notes-cell {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.notes-preview {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;
+  color: #555;
+  max-width: 380px;
+  padding-right: 15px;
+  text-align: left;
+}
+
+.view-notes-button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-notes-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #c1272d;
+}
+
+/* Modal de notas */
+.notes-modal {
+  max-width: 600px;
+}
+
+.notes-content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100px;
+  max-width: 100%;
+  color: #333;
+  overflow-x: hidden;
+}
+
+/* Mejorar el estilo del modal para asegurar que el contenido largo no lo desborde */
+.modal-body {
+  overflow-x: hidden;
+  word-break: break-word;
+}
+
+/* Data Cards */
+.data-cards {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.data-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  flex: 1;
+  min-width: 220px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.data-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+}
+
+.clients-icon {
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.recent-icon {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: #2ecc71;
+}
+
+.card-info {
+  flex-grow: 1;
+}
+
+.card-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* Company info */
+.company-info {
+  display: flex;
+  align-items: center;
+}
+
+.company-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(193, 39, 45, 0.1);
+  color: #c1272d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 12px;
+}
+
+.company-name {
+  font-weight: 600;
+}
+
+/* Date info */
+.date-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-value {
+  font-weight: 600;
+}
+
+.date-ago {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 16px;
+  width: 500px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-close-button:hover {
+  color: #e74c3c;
+}
+
+.modal-form {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #c1272d;
+  box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  margin: 15px;
+}
+
+.modal-button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.cancel-button {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+.cancel-button:hover {
+  background-color: #343a40;
+  color: white;
+}
+
+.save-button {
+  background-color: #c1272d;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #a01218;
+}
+
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+}
+
+/* Delete Confirmation Modal */
+.delete-confirm-modal {
+  width: 400px;
+}
+
+.delete-header {
+  color: #e74c3c;
+}
+
+.delete-warning-icon {
+  color: #e74c3c;
+  margin-bottom: 16px;
+}
+
+.delete-warning {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Ajustes para la tabla de clientes */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.data-table th {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+  padding: 16px 24px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.data-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 14px;
+}
+
+/* Ajustar anchos de columnas */
+.column-name {
+  width: 25%;
+}
+
+.column-date {
+  width: 15%;
+}
+
+.column-notes {
+  width: 45%;
+}
+
+.column-actions {
+  width: 15%;
+}
+
+/* Añadir más espacio a las filas */
+.data-row {
+  height: 70px;
+}
+
+/* Ajuste a la previsualización de notas */
+.notes-preview {
+  max-width: 380px;
+  padding-right: 15px;
+}
+
+/* Ajustar espacio entre filas */
+.data-table tr {
+  transition: background-color 0.2s ease;
+}
+
+.data-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .data-cards {
+    flex-wrap: wrap;
+  }
+
+  .data-card {
+    flex-basis: 100%;
+  }
+
+  .modal-container {
+    width: 95%;
+  }
+
+  .column-name {
+    width: 30%;
+  }
+
+  .column-date {
+    width: 20%;
+  }
+
+  .column-notes {
+    width: 35%;
+  }
+
+  .column-actions {
+    width: 15%;
+  }
+
+  .data-table td {
+    padding: 12px 16px;
   }
 }
 </style>
