@@ -18,12 +18,16 @@ export default {
     const registrosDesencriptados = ref([]);
     const registroTipoServicioFiltro = ref("todos");
     const registroClienteFiltro = ref("todos");
-    const registroOrden = ref("newest");
+    const registroOrden = ref("clientName"); // Cambiado a ordenamiento por nombre de cliente
     const showRegistroModal = ref(false);
     const isEditingRegistro = ref(false);
     const clientes = ref([]);
     const tiposServicios = ref([]);
     const notifications = ref([]);
+    const tableContainer = ref(null);
+    const isDragging = ref(false);
+    const startX = ref(0);
+    const scrollLeft = ref(0);
 
     // Estados para contraseñas
     const passwordVisibility = ref({});
@@ -39,7 +43,37 @@ export default {
       contraseñaDesencriptada: "",
       notas: "",
       fechaCreacion: new Date().toISOString(),
+      url: "",
+      url_2: "",
+      isp: "",
+      nombre_bbdd: "", // Cambiado de nombre_bt a nombre_bbdd
     });
+
+    // Métodos para el desplazamiento horizontal
+    const handleMouseDown = (e) => {
+      isDragging.value = true;
+      startX.value = e.pageX - tableContainer.value.offsetLeft;
+      scrollLeft.value = tableContainer.value.scrollLeft;
+      tableContainer.value.style.cursor = "grabbing";
+    };
+
+    const handleMouseLeave = () => {
+      isDragging.value = false;
+      tableContainer.value.style.cursor = "grab";
+    };
+
+    const handleMouseUp = () => {
+      isDragging.value = false;
+      tableContainer.value.style.cursor = "grab";
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging.value) return;
+      e.preventDefault();
+      const x = e.pageX - tableContainer.value.offsetLeft;
+      const walk = (x - startX.value) * 1.5; // Multiplicador para ajustar velocidad
+      tableContainer.value.scrollLeft = scrollLeft.value - walk;
+    };
 
     // Notificación
     const showNotification = (message, type = "info") => {
@@ -310,12 +344,6 @@ export default {
       return servicio ? servicio.nombre : `Servicio #${id}`;
     };
 
-    // Métodos de inicial de usuario
-    const getUserInitial = (name) => {
-      if (!name) return "U";
-      return name.charAt(0).toUpperCase();
-    };
-
     // Filtrar registros
     const filteredRegistros = computed(() => {
       let result = props.isAdmin
@@ -352,6 +380,11 @@ export default {
               registro.usuario.toLowerCase().includes(query)) ||
             (registro.contraseñaDesencriptada &&
               registro.contraseñaDesencriptada.toLowerCase().includes(query)) ||
+            (registro.url && registro.url.toLowerCase().includes(query)) ||
+            (registro.url_2 && registro.url_2.toLowerCase().includes(query)) ||
+            (registro.isp && registro.isp.toLowerCase().includes(query)) ||
+            (registro.nombre_bbdd &&
+              registro.nombre_bbdd.toLowerCase().includes(query)) ||
             registro.id_Registro.toString().includes(query) ||
             (getClienteName(registro.id_Cliente) &&
               getClienteName(registro.id_Cliente)
@@ -364,16 +397,26 @@ export default {
         );
       }
 
-      // Ordenar por fecha
+      // Ordenar según criterio seleccionado
       result = [...result].sort((a, b) => {
-        const dateA = new Date(a.fechaCreacion || 0);
-        const dateB = new Date(b.fechaCreacion || 0);
-
-        if (registroOrden.value === "newest") {
+        if (registroOrden.value === "clientName") {
+          // Ordenar por nombre de cliente
+          const clienteA = getClienteName(a.id_Cliente).toLowerCase();
+          const clienteB = getClienteName(b.id_Cliente).toLowerCase();
+          return clienteA.localeCompare(clienteB);
+        } else if (registroOrden.value === "newest") {
+          // Ordenar por fecha más reciente
+          const dateA = new Date(a.fechaCreacion || 0);
+          const dateB = new Date(b.fechaCreacion || 0);
           return dateB - dateA;
-        } else {
+        } else if (registroOrden.value === "oldest") {
+          // Ordenar por fecha más antigua
+          const dateA = new Date(a.fechaCreacion || 0);
+          const dateB = new Date(b.fechaCreacion || 0);
           return dateA - dateB;
         }
+        // Ordenamiento predeterminado
+        return 0;
       });
 
       return result;
@@ -494,6 +537,10 @@ export default {
           Servicio: getServicioName(registro.id_TipoServicio),
           Usuario: registro.usuario,
           Contraseña: registro.contraseñaDesencriptada,
+          URL: registro.url || "",
+          URL_Alternativa: registro.url_2 || "",
+          ISP: registro.isp || "",
+          BBDD: registro.nombre_bbdd || "",
           Notas: registro.notas || "",
           Fecha: formatDate(registro.fechaCreacion),
         }));
@@ -575,13 +622,17 @@ export default {
 
         // Formatear datos para portapapeles
         let clipboardText =
-          "Cliente\tServicio\tUsuario\tContraseña\tNotas\tFecha\n";
+          "Cliente\tServicio\tUsuario\tContraseña\tURL\tURL Alt\tISP\tBBDD\tNotas\tFecha\n";
 
         registrosConPassword.forEach((registro) => {
           clipboardText += `${getClienteName(registro.id_Cliente)}\t`;
           clipboardText += `${getServicioName(registro.id_TipoServicio)}\t`;
           clipboardText += `${registro.usuario}\t`;
           clipboardText += `${registro.contraseñaDesencriptada}\t`;
+          clipboardText += `${registro.url || ""}\t`;
+          clipboardText += `${registro.url_2 || ""}\t`;
+          clipboardText += `${registro.isp || ""}\t`;
+          clipboardText += `${registro.nombre_bbdd || ""}\t`;
           clipboardText += `${registro.notas || ""}\t`;
           clipboardText += `${formatDate(registro.fechaCreacion)}\n`;
         });
@@ -662,6 +713,47 @@ export default {
         // Intentar copiar
         await copyText(username);
         showNotification("Usuario copiado al portapapeles", "success");
+      } catch (error) {
+        console.error("Error al copiar:", error);
+        showNotification(`Error al copiar: ${error.message}`, "error");
+      }
+    };
+
+    // Copiar texto genérico al portapapeles
+    const copyTextToClipboard = async (text, type = "Texto") => {
+      try {
+        if (!text) {
+          showNotification(
+            `No hay ${type.toLowerCase()} para copiar`,
+            "warning"
+          );
+          return;
+        }
+
+        const copyText = (text) => {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+          }
+
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.select();
+
+          try {
+            const successful = document.execCommand("copy");
+            document.body.removeChild(textArea);
+            return successful
+              ? Promise.resolve()
+              : Promise.reject(new Error("Copying failed"));
+          } catch (err) {
+            document.body.removeChild(textArea);
+            return Promise.reject(err);
+          }
+        };
+
+        await copyText(text);
+        showNotification(`${type} copiado al portapapeles`, "success");
       } catch (error) {
         console.error("Error al copiar:", error);
         showNotification(`Error al copiar: ${error.message}`, "error");
@@ -773,6 +865,10 @@ export default {
           contraseña: "",
           contraseñaDesencriptada: "",
           notas: "",
+          url: "",
+          url_2: "",
+          isp: "",
+          nombre_bbdd: "",
           fechaCreacion: new Date().toISOString(),
         };
         isEditingRegistro.value = false;
@@ -954,6 +1050,14 @@ export default {
       showDeleteConfirmModal,
       deleteItemName,
       notifications,
+      tableContainer,
+      isDragging,
+
+      // Métodos para el desplazamiento
+      handleMouseDown,
+      handleMouseLeave,
+      handleMouseUp,
+      handleMouseMove,
 
       // Estados de contraseñas
       passwordVisibility,
@@ -976,6 +1080,7 @@ export default {
       togglePasswordVisibility,
       copyToClipboard,
       copyUsernameToClipboard,
+      copyTextToClipboard,
       exportToExcel,
       copySelectedRegistros,
       toggleSelectAllRegistros,
@@ -986,7 +1091,6 @@ export default {
       getTimeAgo,
       getClienteName,
       getServicioName,
-      getUserInitial,
       getTodayRegistrosCount,
 
       // Notificaciones
@@ -1121,6 +1225,7 @@ export default {
       <div class="filter-group">
         <label>Ordenar por:</label>
         <select v-model="registroOrden" class="filter-select">
+          <option value="clientName">Nombre de cliente</option>
           <option value="newest">Más recientes primero</option>
           <option value="oldest">Más antiguos primero</option>
         </select>
@@ -1175,7 +1280,14 @@ export default {
       </div>
     </div>
 
-    <div class="table-container">
+    <div
+      ref="tableContainer"
+      class="table-container draggable"
+      @mousedown="handleMouseDown"
+      @mouseleave="handleMouseLeave"
+      @mouseup="handleMouseUp"
+      @mousemove="handleMouseMove"
+    >
       <table class="data-table logs-table">
         <thead>
           <tr>
@@ -1195,6 +1307,10 @@ export default {
             <th class="column-service">Servicio</th>
             <th class="column-user">Usuario</th>
             <th class="column-password">Contraseña</th>
+            <th class="column-url">URL</th>
+            <th class="column-url">URL Alt.</th>
+            <th class="column-isp">ISP</th>
+            <th class="column-bbdd">BBDD</th>
             <th class="column-notes">Notas</th>
             <th class="column-date">Fecha</th>
             <th v-if="isAdmin" class="column-actions">Acciones</th>
@@ -1236,9 +1352,6 @@ export default {
             </td>
             <td class="column-user">
               <div class="user-info-cell">
-                <div class="user-avatar">
-                  {{ getUserInitial(registro.usuario) }}
-                </div>
                 <span class="user-name-cell">{{ registro.usuario }}</span>
                 <button
                   @click="copyUsernameToClipboard(registro.usuario)"
@@ -1350,6 +1463,146 @@ export default {
                 </div>
               </div>
             </td>
+            <td class="column-url">
+              <div class="url-cell">
+                <span class="url-value text-truncate">{{
+                  registro.url || "-"
+                }}</span>
+                <button
+                  v-if="registro.url"
+                  @click="copyTextToClipboard(registro.url, 'URL')"
+                  class="copy-button"
+                  title="Copiar URL"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect
+                      x="9"
+                      y="9"
+                      width="13"
+                      height="13"
+                      rx="2"
+                      ry="2"
+                    ></rect>
+                    <path
+                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="column-url">
+              <div class="url-cell">
+                <span class="url-value text-truncate">{{
+                  registro.url_2 || "-"
+                }}</span>
+                <button
+                  v-if="registro.url_2"
+                  @click="
+                    copyTextToClipboard(registro.url_2, 'URL Alternativa')
+                  "
+                  class="copy-button"
+                  title="Copiar URL Alternativa"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect
+                      x="9"
+                      y="9"
+                      width="13"
+                      height="13"
+                      rx="2"
+                      ry="2"
+                    ></rect>
+                    <path
+                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="column-isp">
+              <div class="isp-cell">
+                <span class="isp-value">{{ registro.isp || "-" }}</span>
+                <button
+                  v-if="registro.isp"
+                  @click="copyTextToClipboard(registro.isp, 'ISP')"
+                  class="copy-button"
+                  title="Copiar ISP"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect
+                      x="9"
+                      y="9"
+                      width="13"
+                      height="13"
+                      rx="2"
+                      ry="2"
+                    ></rect>
+                    <path
+                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="column-bbdd">
+              <div class="bbdd-cell">
+                <span class="bbdd-value">{{
+                  registro.nombre_bbdd || "-"
+                }}</span>
+                <button
+                  v-if="registro.nombre_bbdd"
+                  @click="copyTextToClipboard(registro.nombre_bbdd, 'BBDD')"
+                  class="copy-button"
+                  title="Copiar BBDD"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect
+                      x="9"
+                      y="9"
+                      width="13"
+                      height="13"
+                      rx="2"
+                      ry="2"
+                    ></rect>
+                    <path
+                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
             <td class="column-notes">
               <span class="registro-desc">{{
                 registro.notas || "Sin notas"
@@ -1418,7 +1671,7 @@ export default {
             </td>
           </tr>
           <tr v-if="filteredRegistros.length === 0" class="empty-row">
-            <td :colspan="isAdmin ? 8 : 7" class="empty-message">
+            <td :colspan="isAdmin ? 12 : 11" class="empty-message">
               <div class="empty-content">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1444,7 +1697,7 @@ export default {
 
     <!-- Modal para Registros -->
     <div v-if="showRegistroModal" class="modal-backdrop">
-      <div class="modal-container" @click.stop>
+      <div class="modal-container modal-large" @click.stop>
         <div class="modal-header">
           <h2>
             {{ isEditingRegistro ? "Editar Registro" : "Crear Nuevo Registro" }}
@@ -1465,91 +1718,141 @@ export default {
           </button>
         </div>
         <form @submit.prevent="saveRegistro" class="modal-form">
-          <div class="form-group">
-            <label for="clienteSelect">Cliente</label>
-            <select
-              id="clienteSelect"
-              v-model="currentRegistro.id_Cliente"
-              required
-              class="form-select"
-            >
-              <option value="" disabled selected>Seleccione un cliente</option>
-              <option
-                v-for="cliente in sortedClientes"
-                :key="cliente.id_Cliente"
-                :value="cliente.id_Cliente"
+          <div class="form-row">
+            <div class="form-group">
+              <label for="clienteSelect">Cliente</label>
+              <select
+                id="clienteSelect"
+                v-model="currentRegistro.id_Cliente"
+                required
+                class="form-select"
               >
-                {{ cliente.nombre_Empresa }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="servicioSelect">Tipo de Servicio</label>
-            <select
-              id="servicioSelect"
-              v-model="currentRegistro.id_TipoServicio"
-              required
-              class="form-select"
-            >
-              <option value="" disabled selected>
-                Seleccione un tipo de servicio
-              </option>
-              <option
-                v-for="servicio in sortedTiposServicios"
-                :key="servicio.id_TipoServicio"
-                :value="servicio.id_TipoServicio"
-              >
-                {{ servicio.nombre }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="usuario">Usuario</label>
-            <input
-              id="usuario"
-              v-model="currentRegistro.usuario"
-              placeholder="Ingrese el usuario"
-              required
-              class="form-input"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="password">Contraseña</label>
-            <div class="password-input-group">
-              <input
-                id="password"
-                v-model="currentRegistro.contraseña"
-                type="text"
-                placeholder="Ingrese la contraseña"
-                :required="!isEditingRegistro"
-                class="form-input password-input"
-              />
-              <button
-                type="button"
-                @click="generateSecurePassword"
-                class="generate-password-button"
-                title="Generar contraseña segura"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
+                <option value="" disabled selected>
+                  Seleccione un cliente
+                </option>
+                <option
+                  v-for="cliente in sortedClientes"
+                  :key="cliente.id_Cliente"
+                  :value="cliente.id_Cliente"
                 >
-                  <path d="M19 7l-7 5-7-5"></path>
-                  <path d="M19 12l-7 5-7-5"></path>
-                </svg>
-              </button>
+                  {{ cliente.nombre_Empresa }}
+                </option>
+              </select>
             </div>
-            <small v-if="isEditingRegistro" class="form-hint"
-              >Dejar en blanco para mantener la contraseña actual</small
-            >
+
+            <div class="form-group">
+              <label for="servicioSelect">Tipo de Servicio</label>
+              <select
+                id="servicioSelect"
+                v-model="currentRegistro.id_TipoServicio"
+                required
+                class="form-select"
+              >
+                <option value="" disabled selected>
+                  Seleccione un tipo de servicio
+                </option>
+                <option
+                  v-for="servicio in sortedTiposServicios"
+                  :key="servicio.id_TipoServicio"
+                  :value="servicio.id_TipoServicio"
+                >
+                  {{ servicio.nombre }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="usuario">Usuario</label>
+              <input
+                id="usuario"
+                v-model="currentRegistro.usuario"
+                placeholder="Ingrese el usuario"
+                required
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Contraseña</label>
+              <div class="password-input-group">
+                <input
+                  id="password"
+                  v-model="currentRegistro.contraseña"
+                  type="text"
+                  placeholder="Ingrese la contraseña"
+                  :required="!isEditingRegistro"
+                  class="form-input password-input"
+                />
+                <button
+                  type="button"
+                  @click="generateSecurePassword"
+                  class="generate-password-button"
+                  title="Generar contraseña segura"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M19 7l-7 5-7-5"></path>
+                    <path d="M19 12l-7 5-7-5"></path>
+                  </svg>
+                </button>
+              </div>
+              <small v-if="isEditingRegistro" class="form-hint"
+                >Dejar en blanco para mantener la contraseña actual</small
+              >
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="url">URL</label>
+              <input
+                id="url"
+                v-model="currentRegistro.url"
+                placeholder="Ingrese la URL principal"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="url_2">URL Alternativa</label>
+              <input
+                id="url_2"
+                v-model="currentRegistro.url_2"
+                placeholder="Ingrese la URL alternativa"
+                class="form-input"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="isp">ISP</label>
+              <input
+                id="isp"
+                v-model="currentRegistro.isp"
+                placeholder="Ingrese el proveedor de servicios"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="nombre_bbdd">BBDD</label>
+              <input
+                id="nombre_bbdd"
+                v-model="currentRegistro.nombre_bbdd"
+                placeholder="Ingrese el nombre de la BBDD"
+                class="form-input"
+              />
+            </div>
           </div>
 
           <div class="form-group">
@@ -1737,5 +2040,182 @@ export default {
 .generate-password-button svg {
   width: 18px;
   height: 18px;
+}
+
+/* Estilos para URLs, ISP y BBDD */
+.url-cell,
+.isp-cell,
+.bbdd-cell {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.url-value,
+.isp-value,
+.bbdd-value {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  margin-right: 8px;
+}
+
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Botones de copiar siempre visibles */
+.url-cell .copy-button,
+.isp-cell .copy-button,
+.bbdd-cell .copy-button,
+.user-info-cell .copy-button {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Estilos para el contenedor arrastrable */
+.draggable {
+  cursor: grab;
+  overflow-x: auto;
+  user-select: none;
+}
+
+.draggable:active {
+  cursor: grabbing;
+}
+
+/* Ajustes para el modal */
+.modal-large {
+  width: 700px;
+  max-width: 90%;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+/* Ajustes de columnas para la tabla */
+.column-url {
+  width: 150px;
+}
+
+.column-isp {
+  width: 100px;
+}
+
+.column-bbdd {
+  width: 100px;
+}
+
+.column-user {
+  width: 150px;
+}
+
+/* Quitar el avatar de iniciales del usuario */
+.user-info-cell {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 8px 0;
+}
+
+.user-name-cell {
+  font-weight: 600;
+  margin-right: 8px;
+  flex-grow: 1;
+}
+
+/* Estilos responsivos para la tabla */
+@media (max-width: 1280px) {
+  .data-table {
+    min-width: 1200px;
+    width: 100%;
+  }
+
+  .url-value,
+  .isp-value,
+  .bbdd-value {
+    max-width: 100px;
+  }
+
+  .column-url,
+  .column-isp,
+  .column-bbdd {
+    width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-large {
+    width: 95%;
+  }
+}
+
+/* Ajuste en la tabla para mantener fijo el encabezado */
+.table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  position: relative;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f8f9fa;
+}
+
+.data-table th {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+  padding: 16px 12px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 14px;
+}
+
+/* Ajustes para datos truncados */
+.user-name-cell,
+.password-value,
+.url-value,
+.bbdd-value,
+.isp-value,
+.registro-desc {
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
