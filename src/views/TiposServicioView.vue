@@ -33,7 +33,7 @@ export default {
     const fetchTiposServicios = async () => {
       try {
         const response = await fetch(
-          "http://152.228.135.50:5006/api/TipoServicio",
+          "https://152.228.135.50/api/TipoServicio",
           {
             method: "GET",
             headers: { accept: "*/*" },
@@ -132,8 +132,8 @@ export default {
 
       try {
         const url = isEditingTipoServicio.value
-          ? `http://152.228.135.50:5006/api/TipoServicio/${currentTipoServicio.value.id_TipoServicio}`
-          : "http://152.228.135.50:5006/api/TipoServicio";
+          ? `https://152.228.135.50/api/TipoServicio/${currentTipoServicio.value.id_TipoServicio}`
+          : "https://152.228.135.50/api/TipoServicio";
 
         const method = isEditingTipoServicio.value ? "PUT" : "POST";
 
@@ -186,7 +186,7 @@ export default {
           : "desconocido";
 
         const response = await fetch(
-          `http://152.228.135.50:5006/api/TipoServicio/${id}`,
+          `https://152.228.135.50/api/TipoServicio/${id}`,
           {
             method: "DELETE",
             headers: { accept: "*/*" },

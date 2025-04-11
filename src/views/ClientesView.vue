@@ -46,7 +46,7 @@ export default {
         if (!props.isAdmin) {
           const clienteFetches = clientesAutorizados.map(async (clienteId) => {
             const response = await fetch(
-              `http://152.228.135.50:5006/api/Cliente/${clienteId}`,
+              `https://152.228.135.50/api/Cliente/${clienteId}`,
               {
                 method: "GET",
                 headers: { accept: "*/*" },
@@ -63,13 +63,10 @@ export default {
           clientes.value = await Promise.all(clienteFetches);
         } else {
           // Si es admin, traer todos los clientes
-          const response = await fetch(
-            "http://152.228.135.50:5006/api/Cliente",
-            {
-              method: "GET",
-              headers: { accept: "*/*" },
-            }
-          );
+          const response = await fetch("https://152.228.135.50/api/Cliente", {
+            method: "GET",
+            headers: { accept: "*/*" },
+          });
 
           if (!response.ok) {
             throw new Error("No se pudieron cargar los clientes");
@@ -244,8 +241,8 @@ export default {
 
       try {
         const url = isEditingClient.value
-          ? `http://152.228.135.50:5006/api/Cliente/${currentCliente.value.id_Cliente}`
-          : "http://152.228.135.50:5006/api/Cliente";
+          ? `https://152.228.135.50/api/Cliente/${currentCliente.value.id_Cliente}`
+          : "https://152.228.135.50/api/Cliente";
 
         const method = isEditingClient.value ? "PUT" : "POST";
 
@@ -313,7 +310,7 @@ export default {
           : "desconocido";
 
         const response = await fetch(
-          `http://152.228.135.50:5006/api/Cliente/${id}`,
+          `https://152.228.135.50/api/Cliente/${id}`,
           {
             method: "DELETE",
             headers: { accept: "*/*" },

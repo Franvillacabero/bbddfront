@@ -161,7 +161,7 @@ export default {
 
         // Hacer login con el backend
         const loginResponse = await fetch(
-          "http://152.228.135.50:5006/api/Usuario/login",
+          "https://152.228.135.50/api/Usuario/login",
           {
             method: "POST",
             headers: {
@@ -176,8 +176,8 @@ export default {
 
         if (!loginResponse.ok) {
           loginTracker.recordAttempt(credentials.nombre, false);
-          const errMsg =
-            (await loginResponse.json())?.mensaje || "Error de login";
+          const errData = await loginResponse.json();
+          const errMsg = errData?.mensaje || "Error de login";
           throw new Error(errMsg);
         }
 

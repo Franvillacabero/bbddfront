@@ -184,7 +184,7 @@ export default {
         if (!props.isAdmin) {
           const clienteFetches = clientesAutorizados.map(async (clienteId) => {
             const response = await fetch(
-              `http://152.228.135.50:5006/api/Cliente/${clienteId}`,
+              `https://152.228.135.50/api/Cliente/${clienteId}`,
               {
                 method: "GET",
                 headers: { accept: "*/*" },
@@ -200,13 +200,10 @@ export default {
 
           clientes.value = await Promise.all(clienteFetches);
         } else {
-          const response = await fetch(
-            "http://152.228.135.50:5006/api/Cliente",
-            {
-              method: "GET",
-              headers: { accept: "*/*" },
-            }
-          );
+          const response = await fetch("https://152.228.135.50/api/Cliente", {
+            method: "GET",
+            headers: { accept: "*/*" },
+          });
 
           if (!response.ok) {
             throw new Error("No se pudieron cargar los clientes");
@@ -223,7 +220,7 @@ export default {
     const fetchTiposServicios = async () => {
       try {
         const response = await fetch(
-          "http://152.228.135.50:5006/api/TipoServicio",
+          "https://152.228.135.50/api/TipoServicio",
           {
             method: "GET",
             headers: { accept: "*/*" },
@@ -274,7 +271,7 @@ export default {
         if (!props.isAdmin) {
           const registroFetches = clientesAutorizados.map(async (clienteId) => {
             const response = await fetch(
-              `http://152.228.135.50:5006/api/Registro/cliente/${clienteId}`,
+              `https://152.228.135.50/api/Registro/cliente/${clienteId}`,
               {
                 method: "GET",
                 headers: { accept: "*/*" },
@@ -298,13 +295,10 @@ export default {
           registros.value = registrosUnicos;
         } else {
           // Si es admin, traer todos los registros
-          const response = await fetch(
-            "http://152.228.135.50:5006/api/Registro",
-            {
-              method: "GET",
-              headers: { accept: "*/*" },
-            }
-          );
+          const response = await fetch("https://152.228.135.50/api/Registro", {
+            method: "GET",
+            headers: { accept: "*/*" },
+          });
 
           if (!response.ok) {
             throw new Error("No se pudieron cargar los registros");
@@ -455,7 +449,7 @@ export default {
       if (!passwordVisibility.value[registroId]) {
         try {
           const response = await fetch(
-            `http://152.228.135.50:5006/api/Registro/decrypt/${registroId}`,
+            `https://152.228.135.50/api/Registro/decrypt/${registroId}`,
             {
               method: "GET",
               headers: { accept: "*/*" },
@@ -533,7 +527,7 @@ export default {
             // Si no tiene contraseña desencriptada, obtenerla
             try {
               const response = await fetch(
-                `http://152.228.135.50:5006/api/Registro/decrypt/${registro.id_Registro}`,
+                `https://152.228.135.50/api/Registro/decrypt/${registro.id_Registro}`,
                 {
                   method: "GET",
                   headers: { accept: "*/*" },
@@ -622,7 +616,7 @@ export default {
             // Si no tiene contraseña desencriptada, obtenerla
             try {
               const response = await fetch(
-                `http://152.228.135.50:5006/api/Registro/decrypt/${registro.id_Registro}`,
+                `https://152.228.135.50/api/Registro/decrypt/${registro.id_Registro}`,
                 {
                   method: "GET",
                   headers: { accept: "*/*" },
@@ -801,7 +795,7 @@ export default {
         // Si no hay contraseña desencriptada, hacer fetch
         if (!registro || !registro.contraseñaDesencriptada) {
           const response = await fetch(
-            `http://152.228.135.50:5006/api/Registro/decrypt/${registroId}`,
+            `https://152.228.135.50/api/Registro/decrypt/${registroId}`,
             {
               method: "GET",
               headers: {
@@ -916,8 +910,8 @@ export default {
         let registroData = { ...currentRegistro.value };
 
         const url = isEditingRegistro.value
-          ? `http://152.228.135.50:5006/api/Registro/${currentRegistro.value.id_Registro}`
-          : "http://152.228.135.50:5006/api/Registro";
+          ? `https://152.228.135.50/api/Registro/${currentRegistro.value.id_Registro}`
+          : "https://152.228.135.50/api/Registro";
 
         const method = isEditingRegistro.value ? "PUT" : "POST";
 
@@ -991,7 +985,7 @@ export default {
 
       try {
         const response = await fetch(
-          `http://152.228.135.50:5006/api/Registro/${id}`,
+          `https://152.228.135.50/api/Registro/${id}`,
           {
             method: "DELETE",
             headers: { accept: "*/*" },
