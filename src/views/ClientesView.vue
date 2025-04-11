@@ -111,6 +111,7 @@ export default {
     };
 
     // Filtrar clientes según la búsqueda
+    // Modificación en la función computada de filteredClientes en ClientesView.vue
     const filteredClientes = computed(() => {
       const query = searchQuery.value.toLowerCase().trim();
       const clientesAutorizados = JSON.parse(
@@ -123,13 +124,18 @@ export default {
             clientesAutorizados.includes(cliente.id_Cliente)
           );
 
-      if (!query) return resultClientes;
+      if (query) {
+        resultClientes = resultClientes.filter(
+          (cliente) =>
+            cliente.nombre_Empresa.toLowerCase().includes(query) ||
+            cliente.id_Cliente.toString().includes(query) ||
+            (cliente.notas && cliente.notas.toLowerCase().includes(query))
+        );
+      }
 
-      return resultClientes.filter(
-        (cliente) =>
-          cliente.nombre_Empresa.toLowerCase().includes(query) ||
-          cliente.id_Cliente.toString().includes(query) ||
-          (cliente.notas && cliente.notas.toLowerCase().includes(query))
+      // Ordenar alfabéticamente por nombre de empresa
+      return [...resultClientes].sort((a, b) =>
+        a.nombre_Empresa.localeCompare(b.nombre_Empresa)
       );
     });
 

@@ -33,6 +33,15 @@ export default {
     const passwordVisibility = ref({});
     const selectedRegistros = ref([]);
 
+    // Estado para modal de notas
+    const showNotesModal = ref(false);
+    const viewingNotes = ref({
+      registroId: null,
+      clienteName: "",
+      serviceName: "",
+      notes: "",
+    });
+
     // Estado actual de registro
     const currentRegistro = ref({
       id_Registro: null,
@@ -46,7 +55,7 @@ export default {
       url: "",
       url_2: "",
       isp: "",
-      nombre_bbdd: "", // Cambiado de nombre_bt a nombre_bbdd
+      nombre_BBDD: "", // Cambiado de nombre_bt a nombre_BBDD
     });
 
     // Métodos para el desplazamiento horizontal
@@ -73,6 +82,25 @@ export default {
       const x = e.pageX - tableContainer.value.offsetLeft;
       const walk = (x - startX.value) * 1.5; // Multiplicador para ajustar velocidad
       tableContainer.value.scrollLeft = scrollLeft.value - walk;
+    };
+
+    // Métodos de notas
+    const openNotesModal = (registro) => {
+      viewingNotes.value = {
+        registroId: registro.id_Registro,
+        clienteName: getClienteName(registro.id_Cliente),
+        serviceName: getServicioName(registro.id_TipoServicio),
+        notes: registro.notas || "Sin notas",
+      };
+      showNotesModal.value = true;
+    };
+
+    const closeNotesModal = () => {
+      showNotesModal.value = false;
+    };
+
+    const hasNotes = (notas) => {
+      return notas && notas.trim() !== "";
     };
 
     // Notificación
@@ -383,8 +411,8 @@ export default {
             (registro.url && registro.url.toLowerCase().includes(query)) ||
             (registro.url_2 && registro.url_2.toLowerCase().includes(query)) ||
             (registro.isp && registro.isp.toLowerCase().includes(query)) ||
-            (registro.nombre_bbdd &&
-              registro.nombre_bbdd.toLowerCase().includes(query)) ||
+            (registro.nombre_BBDD &&
+              registro.nombre_BBDD.toLowerCase().includes(query)) ||
             registro.id_Registro.toString().includes(query) ||
             (getClienteName(registro.id_Cliente) &&
               getClienteName(registro.id_Cliente)
@@ -540,7 +568,7 @@ export default {
           URL: registro.url || "",
           URL_Alternativa: registro.url_2 || "",
           ISP: registro.isp || "",
-          BBDD: registro.nombre_bbdd || "",
+          BBDD: registro.nombre_BBDD || "",
           Notas: registro.notas || "",
           Fecha: formatDate(registro.fechaCreacion),
         }));
@@ -632,7 +660,7 @@ export default {
           clipboardText += `${registro.url || ""}\t`;
           clipboardText += `${registro.url_2 || ""}\t`;
           clipboardText += `${registro.isp || ""}\t`;
-          clipboardText += `${registro.nombre_bbdd || ""}\t`;
+          clipboardText += `${registro.nombre_BBDD || ""}\t`;
           clipboardText += `${registro.notas || ""}\t`;
           clipboardText += `${formatDate(registro.fechaCreacion)}\n`;
         });
@@ -868,7 +896,7 @@ export default {
           url: "",
           url_2: "",
           isp: "",
-          nombre_bbdd: "",
+          nombre_BBDD: "",
           fechaCreacion: new Date().toISOString(),
         };
         isEditingRegistro.value = false;
@@ -1052,6 +1080,8 @@ export default {
       notifications,
       tableContainer,
       isDragging,
+      showNotesModal,
+      viewingNotes,
 
       // Métodos para el desplazamiento
       handleMouseDown,
@@ -1085,6 +1115,9 @@ export default {
       copySelectedRegistros,
       toggleSelectAllRegistros,
       generateSecurePassword,
+      openNotesModal,
+      closeNotesModal,
+      hasNotes,
 
       // Utilidades
       formatDate,
@@ -1571,11 +1604,11 @@ export default {
             <td class="column-bbdd">
               <div class="bbdd-cell">
                 <span class="bbdd-value">{{
-                  registro.nombre_bbdd || "-"
+                  registro.nombre_BBDD || "-"
                 }}</span>
                 <button
-                  v-if="registro.nombre_bbdd"
-                  @click="copyTextToClipboard(registro.nombre_bbdd, 'BBDD')"
+                  v-if="registro.nombre_BBDD"
+                  @click="copyTextToClipboard(registro.nombre_BBDD, 'BBDD')"
                   class="copy-button"
                   title="Copiar BBDD"
                 >
@@ -1604,9 +1637,37 @@ export default {
               </div>
             </td>
             <td class="column-notes">
-              <span class="registro-desc">{{
-                registro.notas || "Sin notas"
-              }}</span>
+              <div class="notes-cell">
+                <span class="notes-preview">
+                  {{
+                    registro.notas
+                      ? registro.notas.substring(0, 40) +
+                        (registro.notas.length > 40 ? "..." : "")
+                      : "Sin notas"
+                  }}
+                </span>
+                <button
+                  v-if="hasNotes(registro.notas)"
+                  @click="openNotesModal(registro)"
+                  class="view-notes-button"
+                  title="Ver notas completas"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                    ></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
             </td>
             <td class="column-date">
               <div class="date-info">
@@ -1663,7 +1724,7 @@ export default {
                   >
                     <path d="M3 6h18"></path>
                     <path
-                      d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                      d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 0122v2"
                     ></path>
                   </svg>
                 </button>
@@ -1845,10 +1906,10 @@ export default {
             </div>
 
             <div class="form-group">
-              <label for="nombre_bbdd">BBDD</label>
+              <label for="nombre_BBDD">BBDD</label>
               <input
-                id="nombre_bbdd"
-                v-model="currentRegistro.nombre_bbdd"
+                id="nombre_BBDD"
+                v-model="currentRegistro.nombre_BBDD"
                 placeholder="Ingrese el nombre de la BBDD"
                 class="form-input"
               />
@@ -1936,6 +1997,43 @@ export default {
           </button>
           <button @click="executeDelete" class="modal-button delete-button">
             Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para Ver Notas -->
+    <div v-if="showNotesModal" class="modal-backdrop">
+      <div class="modal-container notes-modal" @click.stop>
+        <div class="modal-header">
+          <h2>
+            Notas de {{ viewingNotes.clienteName }} ({{
+              viewingNotes.serviceName
+            }})
+          </h2>
+          <button @click="closeNotesModal" class="modal-close-button">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="notes-content">
+            {{ viewingNotes.notes }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeNotesModal" class="modal-button cancel-button">
+            Cerrar
           </button>
         </div>
       </div>
@@ -2075,6 +2173,64 @@ export default {
 .user-info-cell .copy-button {
   opacity: 1;
   visibility: visible;
+}
+
+/* Estilos para la celda de notas y botón de visualización */
+.notes-cell {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.notes-preview {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;
+  color: #555;
+  max-width: 180px;
+  padding-right: 15px;
+}
+
+.view-notes-button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  visibility: visible;
+}
+
+.view-notes-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #c1272d;
+}
+
+/* Modal de notas */
+.notes-modal {
+  max-width: 600px;
+}
+
+.notes-content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100px;
+  max-width: 100%;
+  color: #333;
+  overflow-x: hidden;
 }
 
 /* Estilos para el contenedor arrastrable */
