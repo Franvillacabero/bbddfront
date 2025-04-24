@@ -41,6 +41,16 @@ const sections = [
             <line x1="12" y1="12" x2="16.5" y2="16.5"></line>
           </svg>`,
   },
+  {
+    id: "usuarios",
+    route: "/dashboard/usuarios",
+    label: "Usuarios",
+    adminOnly: true,
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>`,
+  },
 ];
 
 // Método de logout
@@ -80,8 +90,8 @@ const getInitials = () => {
 
       <nav class="sidebar-menu">
         <router-link
-          v-for="(section, index) in sections"
-          :key="index"
+          v-for="section in sections.filter((s) => !s.adminOnly || isAdmin)"
+          :key="section.id"
           :to="section.route"
           class="menu-item"
           active-class="active"

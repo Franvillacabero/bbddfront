@@ -4,6 +4,7 @@ import DashboardView from "@/views/DashboardView.vue";
 import ClientesView from "@/views/ClientesView.vue";
 import TiposServicioView from "@/views/TiposServicioView.vue";
 import RegistrosView from "@/views/RegistrosView.vue";
+import UsuariosView from "@/views/UsuariosView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -35,6 +36,12 @@ const routes: Array<RouteRecordRaw> = [
         name: "Registros",
         component: RegistrosView,
       },
+      {
+        path: "usuarios",
+        name: "Usuarios",
+        component: UsuariosView,
+        meta: { requiresAdmin: true },
+      },
     ],
   },
 ];
@@ -47,10 +54,17 @@ const router = createRouter({
 // Guardia de navegación
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("token");
+  const isAdmin = localStorage.getItem("esAdmin") === "true";
 
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!isAuthenticated) {
       next("/");
+    } else if (
+      to.matched.some((record) => record.meta.requiresAdmin) &&
+      !isAdmin
+    ) {
+      // Si la ruta requiere admin y el usuario no es admin, redirigir al dashboard
+      next("/dashboard/clientes");
     } else {
       next();
     }
