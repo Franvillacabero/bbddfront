@@ -1,17 +1,14 @@
-# Etapa 1: construir el frontend
+# Etapa 1: build del frontend Vue
 FROM node:18-alpine AS build-stage
 WORKDIR /app
 COPY . .
 RUN npm install && npm run build
 
-# Etapa 2: servir con Nginx
+# Etapa 2: servir build estático (sin SSL)
 FROM nginx:alpine AS production-stage
 
-# Copia el build al HTML público de Nginx
+# Copiamos solo los archivos construidos
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Copia configuración de Nginx
-COPY nginx.conf ../Back/nginx.conf
-
-# Copia certificados (asegúrate de tenerlos en ./ssl/)
-COPY ssl ../Back/ssl
+# Importante: NO copiamos certificados
+# Nginx externo se encargará del SSL
