@@ -1,32 +1,17 @@
-# Use an official Node runtime as the base image
-FROM node:18-alpine AS build
-
-# Set working directory in the container
+# Etapa 1: construir el frontend
+FROM node:18-alpine AS build-stage
 WORKDIR /app
-
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
-# Install project dependencies
-RUN npm install
-
-# Copy project files into the docker image
 COPY . .
+RUN npm install && npm run build
 
-# Build the app for production
-RUN npm run build
+# Etapa 2: servir con Nginx
+FROM nginx:alpine AS production-stage
 
-# Production stage
-FROM nginx:alpine
+# Copia el build al HTML público de Nginx
+COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Copy the built app from the build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copia configuración de Nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose port 80
-EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Copia certificados (asegúrate de tenerlos en ./ssl/)
+COPY ssl /etc/nginx/ssl
