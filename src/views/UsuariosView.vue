@@ -32,7 +32,7 @@ export default {
     // Estado para clientes disponibles (para asignar permisos)
     const clientesDisponibles = ref([]);
 
-    // Cargar usuarios
+    // Cargar usuarios usando el endpoint específico no-admins
     const fetchUsuarios = async () => {
       try {
         // Solo admin puede ver la lista de usuarios
@@ -148,7 +148,10 @@ export default {
         currentUsuario.value = {
           ...usuario,
           contraseña: "", // Resetear contraseña para edición
-          clientes: usuario.clientes || [],
+          // Asegurar que clientes sea un array
+          clientes: Array.isArray(usuario.clientes)
+            ? [...usuario.clientes]
+            : [],
         };
         isEditingUsuario.value = true;
       } else {
@@ -198,13 +201,35 @@ export default {
         // Preparar datos para enviar
         const usuarioData = { ...currentUsuario.value };
 
+        // Asegurar estructura correcta según el controlador
+        usuarioData.id_Usuario = usuarioData.id_Usuario || 0; // Para creación, usar 0 en lugar de null
+
         // Si estamos editando y no hay contraseña, no enviarla
         if (isEditingUsuario.value && !usuarioData.contraseña) {
-          delete usuarioData.contraseña;
+          // Obtener la contraseña actual del usuario existente
+          const userResponse = await fetch(
+            `https://152.228.135.50/api/Usuario/${usuarioData.id_Usuario}`,
+            {
+              method: "GET",
+              headers: { accept: "*/*" },
+            }
+          );
+
+          if (userResponse.ok) {
+            const existingUser = await userResponse.json();
+            usuarioData.contraseña = existingUser.contraseña;
+          } else {
+            throw new Error(
+              "No se pudo obtener la información del usuario para actualizar"
+            );
+          }
         }
 
         // Asegurar que esAdmin sea false (solo creamos usuarios no admin)
         usuarioData.esAdmin = false;
+
+        // Asegurar que el campo se llame correctamente según el controlador
+        usuarioData.clientes = usuarioData.clientes || [];
 
         const response = await fetch(url, {
           method: method,
@@ -216,7 +241,8 @@ export default {
         });
 
         if (!response.ok) {
-          throw new Error("Error al guardar el usuario");
+          const errorText = await response.text();
+          throw new Error(`Error al guardar el usuario: ${errorText}`);
         }
 
         await fetchUsuarios();
@@ -229,45 +255,16 @@ export default {
         showNotification(message, "success");
       } catch (error) {
         console.error("Error:", error);
-        showNotification("Error al guardar el usuario", "error");
+        showNotification(
+          "Error al guardar el usuario: " + error.message,
+          "error"
+        );
       }
     };
 
     // Cerrar modal de Usuario
     const closeUsuarioModal = () => {
       showUsuarioModal.value = false;
-    };
-
-    // Eliminar Usuario
-    const deleteUsuario = async (id) => {
-      // Solo admin puede eliminar usuarios
-      if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `https://152.228.135.50/api/Usuario/${id}`,
-          {
-            method: "DELETE",
-            headers: { accept: "*/*" },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("No se pudo eliminar el usuario");
-        }
-
-        await fetchUsuarios();
-        closeDeleteConfirmModal();
-
-        const message = `Usuario eliminado con éxito`;
-        showNotification(message, "success");
-      } catch (error) {
-        console.error("Error al eliminar usuario:", error);
-        showNotification("Error al eliminar el usuario", "error");
-      }
     };
 
     // Método de confirmación de eliminación
@@ -278,9 +275,67 @@ export default {
         return;
       }
 
-      deleteItemId.value = id;
-      deleteItemName.value = name;
+      // Asegurarnos que el ID sea numérico y válido
+      if (id === undefined || id === null) {
+        showNotification("ID de usuario no válido", "error");
+        return;
+      }
+
+      console.log(
+        `Confirmando eliminación de usuario con ID: ${id}, Nombre: ${name}`
+      );
+
+      // Convertir a entero en caso de que venga como string
+      deleteItemId.value = parseInt(id, 10);
+      deleteItemName.value = name || "Desconocido";
       showDeleteConfirmModal.value = true;
+    };
+
+    // Eliminar Usuario
+    const deleteUsuario = async () => {
+      // Solo admin puede eliminar usuarios
+      if (!props.isAdmin) {
+        showNotification("No tienes permisos para esta acción", "error");
+        return;
+      }
+
+      // Validar que tenemos un ID válido antes de proceder
+      if (!deleteItemId.value) {
+        showNotification("ID de usuario no válido para eliminar", "error");
+        closeDeleteConfirmModal();
+        return;
+      }
+
+      try {
+        console.log(
+          `Intentando eliminar usuario con ID: ${deleteItemId.value}`
+        );
+
+        const response = await fetch(
+          `https://152.228.135.50/api/Usuario/${deleteItemId.value}`,
+          {
+            method: "DELETE",
+            headers: { accept: "*/*" },
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`No se pudo eliminar el usuario: ${errorText}`);
+        }
+
+        await fetchUsuarios();
+        closeDeleteConfirmModal();
+
+        const message = `Usuario eliminado con éxito`;
+        showNotification(message, "success");
+      } catch (error) {
+        console.error("Error al eliminar usuario:", error);
+        showNotification(
+          "Error al eliminar el usuario: " + error.message,
+          "error"
+        );
+      }
     };
 
     const closeDeleteConfirmModal = () => {
@@ -289,6 +344,10 @@ export default {
 
     // Manejar selección de clientes
     const toggleClientSelection = (clienteId) => {
+      if (!currentUsuario.value.clientes) {
+        currentUsuario.value.clientes = [];
+      }
+
       const index = currentUsuario.value.clientes.indexOf(clienteId);
       if (index === -1) {
         currentUsuario.value.clientes.push(clienteId);
@@ -298,7 +357,10 @@ export default {
     };
 
     const isClientSelected = (clienteId) => {
-      return currentUsuario.value.clientes.includes(clienteId);
+      return (
+        currentUsuario.value.clientes &&
+        currentUsuario.value.clientes.includes(clienteId)
+      );
     };
 
     // Generar contraseña segura
