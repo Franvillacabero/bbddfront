@@ -11,7 +11,7 @@ FROM nginx:alpine AS production-stage
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
 # Copia configuración de Nginx
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf ../Back/nginx.conf
 
 # Copia certificados (asegúrate de tenerlos en ./ssl/)
-COPY ssl /etc/nginx/ssl
+COPY ssl ../Back/ssl
