@@ -7,6 +7,8 @@ services:
       dockerfile: dockerfile
     expose:
       - "80"
+    volumes:
+      - ./nginx-frontend.conf:/etc/nginx/nginx.conf:ro
 
   backend:
     build:

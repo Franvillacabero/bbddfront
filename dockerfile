@@ -10,5 +10,8 @@ FROM nginx:alpine AS production-stage
 # Copiamos solo los archivos construidos
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
+# Copiamos la configuración de nginx personalizada
+COPY nginx-frontend.conf /etc/nginx/nginx.conf
+
 # Importante: NO copiamos certificados
 # Nginx externo se encargará del SSL
