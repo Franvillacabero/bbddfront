@@ -973,10 +973,7 @@ export default {
 /* Estilos para el contenedor arrastrable */
 .draggable {
   cursor: grab;
-  overflow-x: auto;
   user-select: none;
-  max-height: 70vh;
-  overflow-y: auto;
 }
 
 .draggable:active {
@@ -1153,13 +1150,17 @@ export default {
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
   margin-bottom: 30px;
   position: relative;
+  overflow-x: auto; /* Habilita desplazamiento horizontal */
+  max-height: 70vh; /* Altura máxima para desplazamiento vertical */
+  overflow-y: auto; /* Habilita desplazamiento vertical */
 }
 
+/* Asegurarse de que la tabla tenga un ancho mínimo */
 .data-table {
   width: 100%;
+  min-width: 800px; /* Asegura que la tabla sea suficientemente ancha para forzar el scroll */
   border-collapse: separate;
   border-spacing: 0;
 }

@@ -659,10 +659,7 @@ export default {
 /* Estilos para el contenedor arrastrable */
 .draggable {
   cursor: grab;
-  overflow-x: auto;
   user-select: none;
-  max-height: 70vh;
-  overflow-y: auto;
 }
 
 .draggable:active {
@@ -674,13 +671,17 @@ export default {
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
   margin-bottom: 30px;
   position: relative;
+  overflow-x: auto; /* Habilita desplazamiento horizontal */
+  max-height: 70vh; /* Altura máxima para desplazamiento vertical */
+  overflow-y: auto; /* Habilita desplazamiento vertical */
 }
 
+/* Asegurarse de que la tabla tenga un ancho mínimo */
 .data-table {
   width: 100%;
+  min-width: 600px; /* Ancho mínimo para forzar scroll en dispositivos pequeños */
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -718,6 +719,15 @@ export default {
 
 .data-row:hover {
   background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Ajustar ancho de columnas para esta vista */
+.column-name {
+  width: 70%;
+}
+
+.column-actions {
+  width: 30%;
 }
 
 /* Estilos para servicio */
