@@ -29,28 +29,36 @@ export default {
 
     // Métodos para el desplazamiento horizontal
     const handleMouseDown = (e) => {
-      isDragging.value = true;
-      startX.value = e.pageX - tableContainer.value.offsetLeft;
-      scrollLeft.value = tableContainer.value.scrollLeft;
-      tableContainer.value.style.cursor = "grabbing";
+      if (tableContainer.value) {
+        isDragging.value = true;
+        startX.value = e.pageX - tableContainer.value.offsetLeft;
+        scrollLeft.value = tableContainer.value.scrollLeft;
+        tableContainer.value.style.cursor = "grabbing";
+      }
     };
 
     const handleMouseLeave = () => {
       isDragging.value = false;
-      tableContainer.value.style.cursor = "grab";
+      if (tableContainer.value) {
+        tableContainer.value.style.cursor = "grab";
+      }
     };
 
     const handleMouseUp = () => {
       isDragging.value = false;
-      tableContainer.value.style.cursor = "grab";
+      if (tableContainer.value) {
+        tableContainer.value.style.cursor = "grab";
+      }
     };
 
     const handleMouseMove = (e) => {
       if (!isDragging.value) return;
       e.preventDefault();
-      const x = e.pageX - tableContainer.value.offsetLeft;
-      const walk = (x - startX.value) * 1.5; // Multiplicador para ajustar velocidad
-      tableContainer.value.scrollLeft = scrollLeft.value - walk;
+      if (tableContainer.value) {
+        const x = e.pageX - tableContainer.value.offsetLeft;
+        const walk = (x - startX.value) * 1.5; // Multiplicador para ajustar velocidad
+        tableContainer.value.scrollLeft = scrollLeft.value - walk;
+      }
     };
 
     // Estado para modal de confirmación de eliminación
@@ -230,6 +238,7 @@ export default {
         }
 
         await fetchTiposServicios();
+        closeDeleteConfirmModal();
         const message = `Tipo de servicio "${servicioName}" eliminado con éxito`;
         showNotification(message, "success");
       } catch (error) {
