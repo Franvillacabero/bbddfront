@@ -21,6 +21,38 @@ export default {
       nombre: "",
     });
 
+    // Referencias para el desplazamiento horizontal
+    const tableContainer = ref(null);
+    const isDragging = ref(false);
+    const startX = ref(0);
+    const scrollLeft = ref(0);
+
+    // Métodos para el desplazamiento horizontal
+    const handleMouseDown = (e) => {
+      isDragging.value = true;
+      startX.value = e.pageX - tableContainer.value.offsetLeft;
+      scrollLeft.value = tableContainer.value.scrollLeft;
+      tableContainer.value.style.cursor = "grabbing";
+    };
+
+    const handleMouseLeave = () => {
+      isDragging.value = false;
+      tableContainer.value.style.cursor = "grab";
+    };
+
+    const handleMouseUp = () => {
+      isDragging.value = false;
+      tableContainer.value.style.cursor = "grab";
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging.value) return;
+      e.preventDefault();
+      const x = e.pageX - tableContainer.value.offsetLeft;
+      const walk = (x - startX.value) * 1.5; // Multiplicador para ajustar velocidad
+      tableContainer.value.scrollLeft = scrollLeft.value - walk;
+    };
+
     // Estado para modal de confirmación de eliminación
     const showDeleteConfirmModal = ref(false);
     const deleteItemId = ref(null);
@@ -240,6 +272,14 @@ export default {
       showDeleteConfirmModal,
       deleteItemName,
       notifications,
+      tableContainer,
+      isDragging,
+
+      // Métodos para el desplazamiento
+      handleMouseDown,
+      handleMouseLeave,
+      handleMouseUp,
+      handleMouseMove,
 
       // Métodos
       openTipoServicioModal,
@@ -332,7 +372,14 @@ export default {
       </div>
     </div>
 
-    <div class="table-container">
+    <div
+      ref="tableContainer"
+      class="table-container draggable"
+      @mousedown="handleMouseDown"
+      @mouseleave="handleMouseLeave"
+      @mouseup="handleMouseUp"
+      @mousemove="handleMouseMove"
+    >
       <table class="data-table">
         <thead>
           <tr>
@@ -609,6 +656,589 @@ export default {
 </template>
 
 <style scoped>
-/* Inherit styles from the global CSS or main layout */
-/* If you need any component-specific styles, add them here */
+/* Estilos para el contenedor arrastrable */
+.draggable {
+  cursor: grab;
+  overflow-x: auto;
+  user-select: none;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.draggable:active {
+  cursor: grabbing;
+}
+
+/* Ajuste en la tabla para mantener fijo el encabezado */
+.table-container {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f8f9fa;
+}
+
+.data-table th {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+  padding: 16px 24px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.data-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 14px;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-row {
+  transition: all 0.3s ease;
+}
+
+.data-row:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Estilos para servicio */
+.service-info {
+  display: flex;
+  align-items: center;
+}
+
+.service-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(155, 89, 182, 0.1);
+  color: #9b59b6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 12px;
+}
+
+.service-name {
+  font-weight: 600;
+}
+
+/* Estilos para tarjetas de datos */
+.data-cards {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.data-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  flex: 1;
+  min-width: 220px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.data-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+}
+
+.services-icon {
+  background-color: rgba(155, 89, 182, 0.1);
+  color: #9b59b6;
+}
+
+.card-info {
+  flex-grow: 1;
+}
+
+.card-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* Estilos para el header */
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header-left {
+  max-width: 60%;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.page-subtitle {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 50px;
+  padding: 10px 20px 10px 40px;
+  width: 260px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #c1272d;
+  box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
+  width: 300px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+.create-button {
+  display: flex;
+  align-items: center;
+  background-color: #c1272d;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.create-button:hover {
+  background-color: #a01218;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button-icon {
+  margin-right: 8px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Estilos para acciones */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  border: none;
+  background: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-2px);
+}
+
+.edit-button:hover {
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.delete-button:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+/* Estilos para fila vacía */
+.empty-row {
+  height: 200px;
+}
+
+.empty-message {
+  text-align: center;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  padding: 40px 0;
+}
+
+.empty-content svg {
+  opacity: 0.4;
+  margin-bottom: 16px;
+}
+
+/* Estilos para modales */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 16px;
+  width: 500px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-close-button:hover {
+  color: #e74c3c;
+}
+
+.modal-form {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #c1272d;
+  box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  margin: 15px;
+}
+
+.modal-button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.cancel-button {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+.cancel-button:hover {
+  background-color: #343a40;
+  color: white;
+}
+
+.save-button {
+  background-color: #c1272d;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #a01218;
+}
+
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+}
+
+/* Modal de confirmación de eliminación */
+.delete-confirm-modal {
+  width: 400px;
+}
+
+.delete-header {
+  color: #e74c3c;
+}
+
+.modal-body {
+  padding: 24px;
+  text-align: center;
+}
+
+.delete-warning-icon {
+  color: #e74c3c;
+  margin-bottom: 16px;
+}
+
+.delete-warning {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* Sistema de notificaciones */
+.notifications-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 350px;
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: slideInRight 0.3s ease;
+}
+
+.notification-success {
+  background-color: #2ecc71;
+}
+
+.notification-error {
+  background-color: #e74c3c;
+}
+
+.notification-info {
+  background-color: #3498db;
+}
+
+.notification-warning {
+  background-color: #f39c12;
+}
+
+.notification-icon {
+  margin-right: 16px;
+}
+
+.notification-content {
+  flex-grow: 1;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .header-actions {
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-left {
+    max-width: 100%;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .data-card {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .service-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .data-table td,
+  .data-table th {
+    padding: 12px 8px;
+  }
+}
 </style>

@@ -23,6 +23,38 @@ export default {
       notas: "", // Añadimos el campo de notas
     });
 
+    // Referencias para el desplazamiento horizontal
+    const tableContainer = ref(null);
+    const isDragging = ref(false);
+    const startX = ref(0);
+    const scrollLeft = ref(0);
+
+    // Métodos para el desplazamiento horizontal
+    const handleMouseDown = (e) => {
+      isDragging.value = true;
+      startX.value = e.pageX - tableContainer.value.offsetLeft;
+      scrollLeft.value = tableContainer.value.scrollLeft;
+      tableContainer.value.style.cursor = "grabbing";
+    };
+
+    const handleMouseLeave = () => {
+      isDragging.value = false;
+      tableContainer.value.style.cursor = "grab";
+    };
+
+    const handleMouseUp = () => {
+      isDragging.value = false;
+      tableContainer.value.style.cursor = "grab";
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging.value) return;
+      e.preventDefault();
+      const x = e.pageX - tableContainer.value.offsetLeft;
+      const walk = (x - startX.value) * 1.5; // Multiplicador para ajustar velocidad
+      tableContainer.value.scrollLeft = scrollLeft.value - walk;
+    };
+
     // Estado para modal de confirmación de eliminación
     const showDeleteConfirmModal = ref(false);
     const deleteItemId = ref(null);
@@ -377,6 +409,14 @@ export default {
       notifications,
       showNotesModal,
       viewingNotes,
+      tableContainer,
+      isDragging,
+
+      // Métodos para el desplazamiento
+      handleMouseDown,
+      handleMouseLeave,
+      handleMouseUp,
+      handleMouseMove,
 
       // Métodos
       openClientModal,
@@ -494,7 +534,14 @@ export default {
       </div>
     </div>
 
-    <div class="table-container">
+    <div
+      ref="tableContainer"
+      class="table-container draggable"
+      @mousedown="handleMouseDown"
+      @mouseleave="handleMouseLeave"
+      @mouseup="handleMouseUp"
+      @mousemove="handleMouseMove"
+    >
       <table class="data-table">
         <thead>
           <tr>
@@ -923,6 +970,19 @@ export default {
   }
 }
 
+/* Estilos para el contenedor arrastrable */
+.draggable {
+  cursor: grab;
+  overflow-x: auto;
+  user-select: none;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.draggable:active {
+  cursor: grabbing;
+}
+
 /* Estilos para la celda de notas y botón de visualización */
 .notes-cell {
   display: flex;
@@ -1088,7 +1148,140 @@ export default {
   color: #6c757d;
 }
 
-/* Modal */
+/* Ajuste en la tabla para mantener fijo el encabezado */
+.table-container {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f8f9fa;
+}
+
+.data-table th {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+  padding: 16px 24px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.data-row {
+  transition: all 0.3s ease;
+}
+
+.data-row:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.data-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 14px;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Ajustar anchos de columnas */
+.column-name {
+  width: 30%;
+}
+
+.column-date {
+  width: 20%;
+}
+
+.column-notes {
+  width: 35%;
+}
+
+.column-actions {
+  width: 15%;
+}
+
+/* Ajustar espacio entre filas */
+.data-table tr {
+  transition: background-color 0.2s ease;
+}
+
+.data-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Estilos para acciones */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  border: none;
+  background: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-2px);
+}
+
+.edit-button:hover {
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.delete-button:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+/* Estilos para fila vacía */
+.empty-row {
+  height: 200px;
+}
+
+.empty-message {
+  text-align: center;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  padding: 40px 0;
+}
+
+.empty-content svg {
+  opacity: 0.4;
+  margin-bottom: 16px;
+}
+
+/* Modals */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -1226,7 +1419,7 @@ export default {
   background-color: #c0392b;
 }
 
-/* Delete Confirmation Modal */
+/* Modal de confirmación de eliminación */
 .delete-confirm-modal {
   width: 400px;
 }
@@ -1266,98 +1459,52 @@ export default {
   }
 }
 
-/* Ajustes para la tabla de clientes */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.data-table th {
-  background-color: #f8f9fa;
-  color: #6c757d;
-  font-weight: 600;
-  font-size: 14px;
-  text-align: left;
-  padding: 16px 24px;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.data-table td {
-  padding: 16px 24px;
-  border-bottom: 1px solid #dee2e6;
-  font-size: 14px;
-}
-
-/* Ajustar anchos de columnas */
-.column-name {
-  width: 25%;
-}
-
-.column-date {
-  width: 15%;
-}
-
-.column-notes {
-  width: 45%;
-}
-
-.column-actions {
-  width: 15%;
-}
-
-/* Añadir más espacio a las filas */
-.data-row {
-  height: 70px;
-}
-
-/* Ajuste a la previsualización de notas */
-.notes-preview {
-  max-width: 380px;
-  padding-right: 15px;
-}
-
-/* Ajustar espacio entre filas */
-.data-table tr {
-  transition: background-color 0.2s ease;
-}
-
-.data-table tr:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .data-cards {
+/* Responsive */
+@media (max-width: 1024px) {
+  .header-actions {
     flex-wrap: wrap;
+  }
+
+  .search-input {
+    width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-left {
+    max-width: 100%;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .data-card {
     flex-basis: 100%;
   }
+}
 
-  .modal-container {
-    width: 95%;
-  }
-
-  .column-name {
-    width: 30%;
-  }
-
-  .column-date {
-    width: 20%;
-  }
-
+@media (max-width: 576px) {
   .column-notes {
-    width: 35%;
+    display: none;
   }
 
-  .column-actions {
-    width: 15%;
+  .company-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
   }
 
-  .data-table td {
-    padding: 12px 16px;
+  .data-table td,
+  .data-table th {
+    padding: 12px 8px;
   }
 }
 </style>
