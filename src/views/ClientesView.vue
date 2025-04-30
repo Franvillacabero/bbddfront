@@ -1336,14 +1336,14 @@ export default {
   animation: fadeIn 0.2s ease;
 }
 
-.modal-container{
+.modal-container {
   content: "";
   position: absolute;
   bottom: 10px;
   right: 10px;
   width: 120px;
   height: 120px;
-  background-image: url('../../public/favicon.svg'); /* Ajusta la ruta según la ubicación de tu archivo SVG */
+  background-image: url("../../public/favicon.svg"); /* Ajusta la ruta según la ubicación de tu archivo SVG */
   background-repeat: no-repeat;
   background-position: center;
   opacity: 0.2;
