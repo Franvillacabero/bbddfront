@@ -1038,95 +1038,80 @@ export default {
   word-break: break-word;
 }
 
-/* Data Cards - Versión compacta */
-.data-cards {
+/* Estilos para el encabezado mejorado */
+.content-header {
   display: flex;
-  margin-bottom: 16px; /* Reducido de 24px */
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.data-card {
-  background-color: white;
-  border-radius: 10px; /* Reducido de 12px */
-  padding: 12px; /* Reducido de 16px */
-  flex: 1;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  max-width: 300px; /* Añadido para limitar el ancho */
-}
-
-.data-card:hover {
-  transform: translateY(-3px); /* Reducido de -5px */
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
-}
-
-.card-content {
+.header-left {
   display: flex;
   align-items: center;
 }
 
-.card-icon {
-  width: 38px; /* Reducido de 48px */
-  height: 38px; /* Reducido de 48px */
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px; /* Reducido de 14px */
-}
-
-.clients-icon {
-  background-color: rgba(52, 152, 219, 0.1);
-  color: #3498db;
-}
-
-.card-info {
-  flex-grow: 1;
-}
-
-.card-info h3 {
-  font-size: 13px; /* Reducido de 14px */
-  font-weight: 600;
-  color: #6c757d;
-  margin-bottom: 2px; /* Reducido de 4px */
-}
-
-.card-value {
-  font-size: 20px; /* Reducido de 24px */
+.page-title {
+  font-size: 24px;
   font-weight: 700;
   color: #2c3e50;
   margin: 0;
 }
 
-/* Reducimos el espacio del contenido principal */
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px; /* Reducido de 30px */
-}
-
-.header-left {
-  max-width: 60%;
-}
-
-.page-title {
-  font-size: 24px; /* Reducido de 28px */
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 4px; /* Reducido de 8px */
-}
-
-.page-subtitle {
-  color: #6c757d;
-  font-size: 14px;
-}
-
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 16px;
 }
 
+/* Estilo de la tarjeta de Total Clientes */
+.total-clients-card {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-width: 150px;
+}
+
+.total-clients-card .card-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.total-clients-card .card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.total-clients-card .card-info {
+  flex-grow: 1;
+}
+
+.total-clients-card h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  margin: 0 0 2px 0;
+}
+
+.total-clients-card .card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+/* Estilos para la búsqueda */
 .search-container {
   position: relative;
 }
@@ -1135,8 +1120,8 @@ export default {
   background-color: #fff;
   border: 1px solid #dee2e6;
   border-radius: 50px;
-  padding: 10px 20px 10px 40px;
-  width: 260px;
+  padding: 8px 16px 8px 36px;
+  width: 220px;
   font-size: 14px;
   transition: all 0.3s ease;
 }
@@ -1145,17 +1130,18 @@ export default {
   outline: none;
   border-color: #c1272d;
   box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
-  width: 300px;
+  width: 250px;
 }
 
 .search-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: #6c757d;
 }
 
+/* Estilo para el botón de creación */
 .create-button {
   display: flex;
   align-items: center;
@@ -1163,7 +1149,7 @@ export default {
   color: white;
   border: none;
   border-radius: 50px;
-  padding: 10px 20px;
+  padding: 8px 16px;
   font-weight: 600;
   font-size: 14px;
   transition: all 0.3s ease;
@@ -1177,7 +1163,7 @@ export default {
 
 .button-icon {
   margin-right: 8px;
-  font-size: 18px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1547,10 +1533,6 @@ export default {
   .header-actions {
     flex-wrap: wrap;
   }
-
-  .search-input {
-    width: 200px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -1566,11 +1548,20 @@ export default {
 
   .header-actions {
     width: 100%;
-    justify-content: space-between;
+    flex-wrap: wrap;
   }
-
-  .data-card {
-    flex-basis: 100%;
+  
+  .total-clients-card {
+    order: -1;
+    margin-bottom: 10px;
+  }
+  
+  .search-container {
+    flex-grow: 1;
+  }
+  
+  .search-input {
+    width: 100%;
   }
 }
 
