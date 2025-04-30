@@ -183,18 +183,6 @@ export default {
       );
     });
 
-    // Contar clientes recientes
-    const getRecentClientsCount = () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      return clientes.value.filter((cliente) => {
-        if (!cliente.fechaRegistro) return false;
-        const registrationDate = new Date(cliente.fechaRegistro);
-        return registrationDate >= thirtyDaysAgo;
-      }).length;
-    };
-
     // Método para formatear fecha
     const formatDate = (dateString) => {
       if (!dateString) return "N/A";
@@ -444,7 +432,6 @@ export default {
       formatDate,
       getTimeAgo,
       getCompanyInitial,
-      getRecentClientsCount,
     };
   },
 };
@@ -474,28 +461,6 @@ export default {
           <div class="card-info">
             <h3>Total Clientes</h3>
             <p class="card-value">{{ clientes.length }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="data-card">
-        <div class="card-content">
-          <div class="card-icon recent-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 6v6l4 2"></path>
-            </svg>
-          </div>
-          <div class="card-info">
-            <h3>Clientes Recientes</h3>
-            <p class="card-value">{{ getRecentClientsCount() }}</p>
           </div>
         </div>
       </div>
@@ -1054,7 +1019,6 @@ export default {
 /* Data Cards */
 .data-cards {
   display: flex;
-  gap: 24px;
   margin-bottom: 24px;
 }
 
@@ -1063,7 +1027,7 @@ export default {
   border-radius: 12px;
   padding: 16px;
   flex: 1;
-  min-width: 220px;
+  width: 100%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
@@ -1091,11 +1055,6 @@ export default {
 .clients-icon {
   background-color: rgba(52, 152, 219, 0.1);
   color: #3498db;
-}
-
-.recent-icon {
-  background-color: rgba(46, 204, 113, 0.1);
-  color: #2ecc71;
 }
 
 .card-info {
