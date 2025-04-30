@@ -1336,15 +1336,19 @@ export default {
   animation: fadeIn 0.2s ease;
 }
 
-.modal-container {
-  background-color: white;
-  border-radius: 16px;
-  width: 500px;
-  max-width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-  animation: slideUp 0.3s ease;
+.modal-container{
+  content: "";
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 120px;
+  height: 120px;
+  background-image: url('/src/assets/netymedia-logo.svg'); /* Ajusta la ruta según la ubicación de tu archivo SVG */
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .modal-header {
