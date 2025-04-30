@@ -1016,25 +1016,26 @@ export default {
   word-break: break-word;
 }
 
-/* Data Cards */
+/* Data Cards - Versión compacta */
 .data-cards {
   display: flex;
-  margin-bottom: 24px;
+  margin-bottom: 16px; /* Reducido de 24px */
 }
 
 .data-card {
   background-color: white;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 10px; /* Reducido de 12px */
+  padding: 12px; /* Reducido de 16px */
   flex: 1;
   width: 100%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+  max-width: 300px; /* Añadido para limitar el ancho */
 }
 
 .data-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px); /* Reducido de -5px */
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
 }
 
 .card-content {
@@ -1043,13 +1044,13 @@ export default {
 }
 
 .card-icon {
-  width: 48px;
-  height: 48px;
+  width: 38px; /* Reducido de 48px */
+  height: 38px; /* Reducido de 48px */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 14px;
+  margin-right: 12px; /* Reducido de 14px */
 }
 
 .clients-icon {
@@ -1062,66 +1063,114 @@ export default {
 }
 
 .card-info h3 {
-  font-size: 14px;
+  font-size: 13px; /* Reducido de 14px */
   font-weight: 600;
   color: #6c757d;
-  margin-bottom: 4px;
+  margin-bottom: 2px; /* Reducido de 4px */
 }
 
 .card-value {
-  font-size: 24px;
+  font-size: 20px; /* Reducido de 24px */
   font-weight: 700;
   color: #2c3e50;
+  margin: 0;
 }
 
-/* Company info */
-.company-info {
+/* Reducimos el espacio del contenido principal */
+.content-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px; /* Reducido de 30px */
 }
 
-.company-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: rgba(193, 39, 45, 0.1);
-  color: #c1272d;
+.header-left {
+  max-width: 60%;
+}
+
+.page-title {
+  font-size: 24px; /* Reducido de 28px */
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 4px; /* Reducido de 8px */
+}
+
+.page-subtitle {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.header-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin-right: 12px;
+  gap: 16px;
 }
 
-.company-name {
-  font-weight: 600;
+.search-container {
+  position: relative;
 }
 
-/* Date info */
-.date-info {
-  display: flex;
-  flex-direction: column;
+.search-input {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 50px;
+  padding: 10px 20px 10px 40px;
+  width: 260px;
+  font-size: 14px;
+  transition: all 0.3s ease;
 }
 
-.date-value {
-  font-weight: 600;
+.search-input:focus {
+  outline: none;
+  border-color: #c1272d;
+  box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
+  width: 300px;
 }
 
-.date-ago {
-  font-size: 12px;
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #6c757d;
 }
 
-/* Ajuste en la tabla para mantener fijo el encabezado */
+.create-button {
+  display: flex;
+  align-items: center;
+  background-color: #c1272d;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.create-button:hover {
+  background-color: #a01218;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button-icon {
+  margin-right: 8px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tabla más compacta */
 .table-container {
   background-color: white;
-  border-radius: 16px;
+  border-radius: 12px; /* Reducido de 16px */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
+  margin-bottom: 20px; /* Reducido de 30px */
   position: relative;
-  overflow-x: auto; /* Habilita desplazamiento horizontal */
-  max-height: 70vh; /* Altura máxima para desplazamiento vertical */
-  overflow-y: auto; /* Habilita desplazamiento vertical */
+  overflow-x: auto;
+  max-height: 65vh; /* Ajustado para acomodar más contenido sin scroll */
+  overflow-y: auto;
 }
 
 /* Asegurarse de que la tabla tenga un ancho mínimo */
@@ -1143,9 +1192,9 @@ export default {
   background-color: #f8f9fa;
   color: #6c757d;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px; /* Reducido de 14px */
   text-align: left;
-  padding: 16px 24px;
+  padding: 12px 20px; /* Reducido de 16px 24px */
   border-bottom: 1px solid #dee2e6;
 }
 
@@ -1158,9 +1207,9 @@ export default {
 }
 
 .data-table td {
-  padding: 16px 24px;
+  padding: 10px 20px; /* Reducido de 16px 24px */
   border-bottom: 1px solid #dee2e6;
-  font-size: 14px;
+  font-size: 13px; /* Reducido de 14px */
 }
 
 .data-table tr:last-child td {
@@ -1193,6 +1242,45 @@ export default {
   background-color: rgba(0, 0, 0, 0.02);
 }
 
+/* Company info más compacto */
+.company-info {
+  display: flex;
+  align-items: center;
+}
+
+.company-avatar {
+  width: 32px; /* Reducido de 36px */
+  height: 32px; /* Reducido de 36px */
+  border-radius: 50%;
+  background-color: rgba(193, 39, 45, 0.1);
+  color: #c1272d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 12px;
+  font-size: 14px; /* Reducido */
+}
+
+.company-name {
+  font-weight: 600;
+}
+
+/* Date info */
+.date-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-value {
+  font-weight: 600;
+}
+
+.date-ago {
+  font-size: 12px;
+  color: #6c757d;
+}
+
 /* Estilos para acciones */
 .action-buttons {
   display: flex;
@@ -1202,8 +1290,8 @@ export default {
 .action-button {
   border: none;
   background: none;
-  width: 36px;
-  height: 36px;
+  width: 32px; /* Reducido de 36px */
+  height: 32px; /* Reducido de 36px */
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1226,9 +1314,9 @@ export default {
   color: #e74c3c;
 }
 
-/* Estilos para fila vacía */
+/* Reducir el espacio de la fila vacía */
 .empty-row {
-  height: 200px;
+  height: 160px; /* Reducido de 200px */
 }
 
 .empty-message {
@@ -1405,6 +1493,11 @@ export default {
   color: #e74c3c;
   font-size: 14px;
   margin-top: 8px;
+}
+
+/* Ajustar espacio entre elementos */
+.data-section {
+  margin-bottom: 20px; /* Reducido de 40px */
 }
 
 @keyframes fadeIn {
