@@ -1153,7 +1153,7 @@ export default {
   margin-bottom: 20px;
   position: relative;
   overflow-x: auto;
-  max-height: 65vh;
+  max-height: 75vh;
   overflow-y: auto;
 }
 

@@ -493,7 +493,7 @@
 .user-info-cell {
   display: flex;
   align-items: center;
-  padding-left: 25px;
+  padding-left: 10px;
 }
 
 .company-avatar,
