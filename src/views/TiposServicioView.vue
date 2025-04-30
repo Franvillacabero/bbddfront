@@ -222,7 +222,6 @@ export default {
       showTipoServicioModal.value = false;
     };
 
-    // Eliminar Tipo de Servicio
     const deleteTipoServicio = async (id) => {
       // Solo admin puede eliminar tipos de servicio
       if (!props.isAdmin) {
@@ -230,29 +229,38 @@ export default {
         return;
       }
 
+      // Convertir a número entero y validar
+      const tipoServicioId = parseInt(id, 10);
+
+      if (isNaN(tipoServicioId)) {
+        showNotification("ID de tipo de servicio no válido", "error");
+        return;
+      }
+
       try {
         const servicioToDelete = tiposServicios.value.find(
-          (s) => s.id_TipoServicio === id
+          (s) => s.id_TipoServicio === tipoServicioId
         );
         const servicioName = servicioToDelete
           ? servicioToDelete.nombre
           : "desconocido";
 
         const response = await fetch(
-          `https://152.228.135.50/api/TipoServicio/${id}`,
+          `https://152.228.135.50/api/TipoServicio/${tipoServicioId}`,
           {
             method: "DELETE",
             headers: {
               accept: "*/*",
-              "Content-Type": "application/json", // Añadido este header
             },
           }
         );
 
         if (!response.ok) {
-          const errorText = await response.text();
+          const errorData = await response.json();
           throw new Error(
-            `No se pudo eliminar el tipo de servicio: ${errorText}`
+            errorData.errors
+              ? Object.values(errorData.errors).flat().join(", ")
+              : "Error al eliminar el tipo de servicio"
           );
         }
 
@@ -269,7 +277,7 @@ export default {
       }
     };
 
-    // Método de confirmación de eliminación
+    // También modificar el método de confirmación de eliminación
     const confirmDelete = (id, name) => {
       // Solo admin puede confirmar eliminación
       if (!props.isAdmin) {
@@ -277,7 +285,8 @@ export default {
         return;
       }
 
-      deleteItemId.value = id;
+      // Asegurarse de que el ID sea un número
+      deleteItemId.value = parseInt(id, 10);
       deleteItemName.value = name;
       showDeleteConfirmModal.value = true;
     };
