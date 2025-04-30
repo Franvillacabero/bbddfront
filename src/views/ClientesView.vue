@@ -1360,7 +1360,7 @@ export default {
   background-repeat: no-repeat;
   background-position: center;
   background-size: 250px;
-  opacity: 0.10;
+  opacity: 0.1;
   pointer-events: none;
   z-index: 0;
 }
