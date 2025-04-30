@@ -222,54 +222,65 @@ export default {
       showTipoServicioModal.value = false;
     };
 
-    const deleteTipoServicio = async (id) => {
+    const deleteTipoServicio = async () => {
+      console.log("Método de eliminación llamado");
+      console.log("deleteItemId:", deleteItemId.value);
+      console.log("deleteItemName:", deleteItemName.value);
+
       // Solo admin puede eliminar tipos de servicio
       if (!props.isAdmin) {
         showNotification("No tienes permisos para esta acción", "error");
         return;
       }
 
-      // Convertir a número entero y validar
-      const tipoServicioId = parseInt(id, 10);
-
-      if (isNaN(tipoServicioId)) {
+      // Validación más estricta del ID
+      if (deleteItemId.value === null || deleteItemId.value === undefined) {
+        console.error("ID de tipo de servicio no válido");
         showNotification("ID de tipo de servicio no válido", "error");
         return;
       }
 
       try {
-        const servicioToDelete = tiposServicios.value.find(
-          (s) => s.id_TipoServicio === tipoServicioId
+        console.log(
+          `Intentando eliminar tipo de servicio con ID: ${deleteItemId.value}`
         );
-        const servicioName = servicioToDelete
-          ? servicioToDelete.nombre
-          : "desconocido";
 
         const response = await fetch(
-          `https://152.228.135.50/api/TipoServicio/${tipoServicioId}`,
+          `https://152.228.135.50/api/TipoServicio/${deleteItemId.value}`,
           {
             method: "DELETE",
             headers: {
               accept: "*/*",
+              "Content-Type": "application/json",
             },
           }
         );
 
+        console.log("Respuesta del servidor:", response);
+
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorText = await response.text();
+          console.error("Error del servidor:", errorText);
           throw new Error(
-            errorData.errors
-              ? Object.values(errorData.errors).flat().join(", ")
-              : "Error al eliminar el tipo de servicio"
+            `No se pudo eliminar el tipo de servicio: ${errorText}`
           );
         }
 
+        console.log("Tipo de servicio eliminado exitosamente");
+
+        // Recargar tipos de servicio
         await fetchTiposServicios();
+
+        // Cerrar modal de confirmación
         closeDeleteConfirmModal();
-        const message = `Tipo de servicio "${servicioName}" eliminado con éxito`;
-        showNotification(message, "success");
+
+        // Mostrar notificación de éxito
+        showNotification(
+          `Tipo de servicio "${deleteItemName.value}" eliminado con éxito`,
+          "success"
+        );
       } catch (error) {
-        console.error("Error al eliminar tipo de servicio:", error);
+        console.error("Error completo al eliminar:", error);
         showNotification(
           `Error al eliminar el tipo de servicio: ${error.message}`,
           "error"
@@ -279,14 +290,16 @@ export default {
 
     // También modificar el método de confirmación de eliminación
     const confirmDelete = (id, name) => {
+      console.log("Confirmando eliminación:", { id, name });
+
       // Solo admin puede confirmar eliminación
       if (!props.isAdmin) {
         showNotification("No tienes permisos para esta acción", "error");
         return;
       }
 
-      // Asegurarse de que el ID sea un número
-      deleteItemId.value = parseInt(id, 10);
+      // Convertir a número
+      deleteItemId.value = id;
       deleteItemName.value = name;
       showDeleteConfirmModal.value = true;
     };
@@ -625,7 +638,7 @@ export default {
             Cancelar
           </button>
           <button
-            @click="deleteTipoServicio(deleteItemId.value)"
+            @click="deleteTipoServicio()"
             class="modal-button delete-button"
           >
             Eliminar
