@@ -1343,7 +1343,7 @@ export default {
   right: 10px;
   width: 120px;
   height: 120px;
-  background-image: url('/src/assets/netymedia-logo.svg'); /* Ajusta la ruta según la ubicación de tu archivo SVG */
+  background-image: url('../../public/favicon.svg'); /* Ajusta la ruta según la ubicación de tu archivo SVG */
   background-repeat: no-repeat;
   background-position: center;
   opacity: 0.2;
