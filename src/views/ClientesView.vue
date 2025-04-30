@@ -467,45 +467,67 @@ export default {
     </div>
 
     <div class="content-header">
-      <div class="header-left">
-        <h1 class="page-title">Gestión de Clientes</h1>
-        <p class="page-subtitle">
-          Total: {{ clientes.length }} clientes registrados
-        </p>
-      </div>
-      <div class="header-actions">
-        <div class="search-container">
-          <input
-            type="text"
-            placeholder="Buscar cliente..."
-            v-model="searchQuery"
-            class="search-input"
-          />
-          <span class="search-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="M21 21l-4.35-4.35"></path>
-            </svg>
-          </span>
+  <div class="header-left">
+    <h1 class="page-title">Gestión de Clientes</h1>
+    <!-- Eliminamos la línea redundante del total -->
+  </div>
+  <div class="header-actions">
+    <div class="total-clients-card">
+      <div class="card-content">
+        <div class="card-icon clients-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 010 7.75"></path>
+          </svg>
         </div>
-        <button
-          v-if="isAdmin"
-          @click="openClientModal(null)"
-          class="create-button"
-        >
-          <span class="button-icon">+</span>
-          <span>Nuevo Cliente</span>
-        </button>
+        <div class="card-info">
+          <h3>Total Clientes</h3>
+          <p class="card-value">{{ clientes.length }}</p>
+        </div>
       </div>
     </div>
+    <div class="search-container">
+      <input
+        type="text"
+        placeholder="Buscar cliente..."
+        v-model="searchQuery"
+        class="search-input"
+      />
+      <span class="search-icon">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+        </svg>
+      </span>
+    </div>
+    <button
+      v-if="isAdmin"
+      @click="openClientModal(null)"
+      class="create-button"
+    >
+      <span class="button-icon">+</span>
+      <span>Nuevo Cliente</span>
+    </button>
+  </div>
+</div>
 
     <div
       ref="tableContainer"
