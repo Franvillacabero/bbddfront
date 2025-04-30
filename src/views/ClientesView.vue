@@ -1048,7 +1048,7 @@ export default {
   border-radius: 10px;
   padding: 8px 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  min-width: 150px;
+  min-width: 120px;
 }
 
 .total-clients-card .card-content {
@@ -1058,8 +1058,8 @@ export default {
 }
 
 .total-clients-card .card-icon {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1148,19 +1148,19 @@ export default {
 /* Tabla más compacta */
 .table-container {
   background-color: white;
-  border-radius: 12px; /* Reducido de 16px */
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px; /* Reducido de 30px */
+  margin-bottom: 20px;
   position: relative;
   overflow-x: auto;
-  max-height: 65vh; /* Ajustado para acomodar más contenido sin scroll */
+  max-height: 65vh;
   overflow-y: auto;
 }
 
 /* Asegurarse de que la tabla tenga un ancho mínimo */
 .data-table {
   width: 100%;
-  min-width: 800px; /* Asegura que la tabla sea suficientemente ancha para forzar el scroll */
+  min-width: 800px;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -1176,9 +1176,9 @@ export default {
   background-color: #f8f9fa;
   color: #6c757d;
   font-weight: 600;
-  font-size: 13px; /* Reducido de 14px */
+  font-size: 13px;
   text-align: left;
-  padding: 12px 20px; /* Reducido de 16px 24px */
+  padding: 12px 20px;
   border-bottom: 1px solid #dee2e6;
 }
 
@@ -1191,9 +1191,9 @@ export default {
 }
 
 .data-table td {
-  padding: 10px 20px; /* Reducido de 16px 24px */
+  padding: 10px 20px;
   border-bottom: 1px solid #dee2e6;
-  font-size: 13px; /* Reducido de 14px */
+  font-size: 13px;
 }
 
 .data-table tr:last-child td {
@@ -1233,8 +1233,8 @@ export default {
 }
 
 .company-avatar {
-  width: 32px; /* Reducido de 36px */
-  height: 32px; /* Reducido de 36px */
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background-color: rgba(193, 39, 45, 0.1);
   color: #c1272d;
@@ -1243,7 +1243,7 @@ export default {
   justify-content: center;
   font-weight: bold;
   margin-right: 12px;
-  font-size: 14px; /* Reducido */
+  font-size: 14px;
 }
 
 .company-name {
@@ -1274,8 +1274,8 @@ export default {
 .action-button {
   border: none;
   background: none;
-  width: 32px; /* Reducido de 36px */
-  height: 32px; /* Reducido de 36px */
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1300,7 +1300,7 @@ export default {
 
 /* Reducir el espacio de la fila vacía */
 .empty-row {
-  height: 160px; /* Reducido de 200px */
+  height: 160px;
 }
 
 .empty-message {
@@ -1337,16 +1337,30 @@ export default {
 }
 
 .modal-container {
+  background-color: white;
+  border-radius: 16px;
+  width: 500px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+
+/* Background logo para el modal - corregido con la ruta correcta */
+.modal-container::before {
   content: "";
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  width: 120px;
-  height: 120px;
-  background-image: url("../../public/favicon.svg"); /* Ajusta la ruta según la ubicación de tu archivo SVG */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../public/favicon.svg");
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.2;
+  background-size: 150px;
+  opacity: 0.05;
   pointer-events: none;
   z-index: 0;
 }
@@ -1357,11 +1371,14 @@ export default {
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #dee2e6;
+  position: relative;
+  z-index: 1;
 }
 
 .modal-header h2 {
   font-size: 20px;
   color: #2c3e50;
+  margin: 0;
 }
 
 .modal-close-button {
@@ -1370,18 +1387,28 @@ export default {
   color: #6c757d;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
 
 .modal-close-button:hover {
   color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
 }
 
 .modal-form {
   padding: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .form-group {
   margin-bottom: 20px;
+  position: relative;
 }
 
 .form-group label {
@@ -1401,6 +1428,7 @@ export default {
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
+  background-color: #fff;
 }
 
 .form-input:focus,
@@ -1411,28 +1439,37 @@ export default {
   box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
 }
 
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
 .form-hint {
   display: block;
   margin-top: 6px;
   font-size: 12px;
   color: #6c757d;
+  text-align: right;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
-  margin: 15px;
+  padding: 15px 24px;
+  border-top: 1px solid #f5f5f5;
+  position: relative;
+  z-index: 1;
 }
 
 .modal-button {
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   border: none;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .cancel-button {
@@ -1441,17 +1478,20 @@ export default {
 }
 
 .cancel-button:hover {
-  background-color: #343a40;
-  color: white;
+  background-color: #dee2e6;
 }
 
-.save-button {
+.save-button,
+.create-button-modal {
   background-color: #c1272d;
   color: white;
 }
 
-.save-button:hover {
+.save-button:hover,
+.create-button-modal:hover {
   background-color: #a01218;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .delete-button {
@@ -1485,7 +1525,7 @@ export default {
 
 /* Ajustar espacio entre elementos */
 .data-section {
-  margin-bottom: 20px; /* Reducido de 40px */
+  margin-bottom: 20px;
 }
 
 @keyframes fadeIn {
