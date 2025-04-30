@@ -20,7 +20,7 @@ export default {
       id_Cliente: null,
       nombre_Empresa: "",
       fechaRegistro: new Date().toISOString(),
-      notas: "", // Añadimos el campo de notas
+      notas: "",
     });
 
     // Referencias para el desplazamiento horizontal
@@ -148,7 +148,6 @@ export default {
     };
 
     // Filtrar clientes según la búsqueda
-    // Modificación en la función computada de filteredClientes en ClientesView.vue
     const filteredClientes = computed(() => {
       const query = searchQuery.value.toLowerCase().trim();
       const clientesAutorizados = JSON.parse(
@@ -238,7 +237,7 @@ export default {
           id_Cliente: null,
           nombre_Empresa: "",
           fechaRegistro: new Date().toISOString(),
-          notas: "", // Inicializamos el campo de notas
+          notas: "",
         };
         isEditingClient.value = false;
       }
@@ -279,7 +278,7 @@ export default {
           : {
               nombre_Empresa: currentCliente.value.nombre_Empresa,
               fechaRegistro: new Date().toISOString(),
-              notas: currentCliente.value.notas || "", // Incluimos las notas
+              notas: currentCliente.value.notas || "",
             };
 
         const response = await fetch(url, {
@@ -363,6 +362,7 @@ export default {
         );
       }
     };
+
     // Método de confirmación de eliminación
     const confirmDelete = (id, name) => {
       // Solo admin puede confirmar eliminación
@@ -439,37 +439,9 @@ export default {
 
 <template>
   <div class="data-section">
-    <div class="data-cards">
-      <div class="data-card">
-        <div class="card-content">
-          <div class="card-icon clients-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 010 7.75"></path>
-            </svg>
-          </div>
-          <div class="card-info">
-            <h3>Total Clientes</h3>
-            <p class="card-value">{{ clientes.length }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="content-header">
       <div class="header-left">
         <h1 class="page-title">Gestión de Clientes</h1>
-        <!-- Eliminamos la línea redundante del total -->
       </div>
       <div class="header-actions">
         <div class="total-clients-card">
@@ -732,7 +704,11 @@ export default {
             >
               Cancelar
             </button>
-            <button type="submit" class="modal-button save-button">
+            <button
+              type="submit"
+              class="modal-button"
+              :class="isEditingClient ? 'save-button' : 'create-button-modal'"
+            >
               {{ isEditingClient ? "Actualizar" : "Crear" }}
             </button>
           </div>
