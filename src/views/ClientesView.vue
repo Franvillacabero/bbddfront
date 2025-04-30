@@ -1359,8 +1359,8 @@ export default {
   background-image: url("../../public/favicon.svg");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 150px;
-  opacity: 0.05;
+  background-size: 250px;
+  opacity: 0.10;
   pointer-events: none;
   z-index: 0;
 }
