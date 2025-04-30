@@ -171,8 +171,17 @@ export default {
       }
 
       try {
+        // Preparar los datos para enviar
+        const tipoServicioData = {
+          // Si estás editando, usa el ID existente. Si es nuevo, establece a 0
+          id_TipoServicio: isEditingTipoServicio.value
+            ? currentTipoServicio.value.id_TipoServicio
+            : 0,
+          nombre: currentTipoServicio.value.nombre,
+        };
+
         const url = isEditingTipoServicio.value
-          ? `https://152.228.135.50/api/TipoServicio/${currentTipoServicio.value.id_TipoServicio}`
+          ? `https://152.228.135.50/api/TipoServicio/${tipoServicioData.id_TipoServicio}`
           : "https://152.228.135.50/api/TipoServicio";
 
         const method = isEditingTipoServicio.value ? "PUT" : "POST";
@@ -183,24 +192,28 @@ export default {
             "Content-Type": "application/json",
             accept: "*/*",
           },
-          body: JSON.stringify(currentTipoServicio.value),
+          body: JSON.stringify(tipoServicioData),
         });
 
         if (!response.ok) {
-          throw new Error("Error al guardar el tipo de servicio");
+          const errorText = await response.text();
+          throw new Error(`Error al guardar el tipo de servicio: ${errorText}`);
         }
 
         await fetchTiposServicios();
         closeTipoServicioModal();
 
         const message = isEditingTipoServicio.value
-          ? `Tipo de servicio "${currentTipoServicio.value.nombre}" actualizado con éxito`
-          : `Tipo de servicio "${currentTipoServicio.value.nombre}" creado con éxito`;
+          ? `Tipo de servicio "${tipoServicioData.nombre}" actualizado con éxito`
+          : `Tipo de servicio "${tipoServicioData.nombre}" creado con éxito`;
 
         showNotification(message, "success");
       } catch (error) {
         console.error("Error:", error);
-        showNotification("Error al guardar el tipo de servicio", "error");
+        showNotification(
+          `Error al guardar el tipo de servicio: ${error.message}`,
+          "error"
+        );
       }
     };
 
@@ -229,12 +242,18 @@ export default {
           `https://152.228.135.50/api/TipoServicio/${id}`,
           {
             method: "DELETE",
-            headers: { accept: "*/*" },
+            headers: {
+              accept: "*/*",
+              "Content-Type": "application/json", // Añadido este header
+            },
           }
         );
 
         if (!response.ok) {
-          throw new Error("No se pudo eliminar el tipo de servicio");
+          const errorText = await response.text();
+          throw new Error(
+            `No se pudo eliminar el tipo de servicio: ${errorText}`
+          );
         }
 
         await fetchTiposServicios();
@@ -243,7 +262,10 @@ export default {
         showNotification(message, "success");
       } catch (error) {
         console.error("Error al eliminar tipo de servicio:", error);
-        showNotification("Error al eliminar el tipo de servicio", "error");
+        showNotification(
+          `Error al eliminar el tipo de servicio: ${error.message}`,
+          "error"
+        );
       }
     };
 
