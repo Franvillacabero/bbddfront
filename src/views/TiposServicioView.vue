@@ -625,7 +625,7 @@ export default {
             Cancelar
           </button>
           <button
-            @click="deleteTipoServicio(deleteItemId)"
+            @click="deleteTipoServicio(deleteItemId.value)"
             class="modal-button delete-button"
           >
             Eliminar
