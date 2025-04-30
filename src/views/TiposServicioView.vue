@@ -1,3 +1,353 @@
+<template>
+  <div class="data-section">
+    <div class="content-header">
+      <div class="header-left">
+        <h1 class="page-title">Gestión de Tipos de Servicio</h1>
+      </div>
+      <div class="header-actions">
+        <div class="total-clients-card">
+          <div class="card-content">
+            <div class="card-icon services-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                ></path>
+                <path d="M14 2v6h6"></path>
+                <path d="M16 13H8"></path>
+                <path d="M16 17H8"></path>
+                <path d="M10 9H8"></path>
+              </svg>
+            </div>
+            <div class="card-info">
+              <h3>Total Servicios</h3>
+              <p class="card-value">{{ tiposServicios.length }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="search-container">
+          <input
+            type="text"
+            placeholder="Buscar tipo de servicio..."
+            v-model="searchQuery"
+            class="search-input"
+          />
+          <span class="search-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+            </svg>
+          </span>
+        </div>
+        <button
+          v-if="isAdmin"
+          @click="openTipoServicioModal(null)"
+          class="create-button"
+        >
+          <span class="button-icon">+</span>
+          <span>Nuevo Tipo</span>
+        </button>
+      </div>
+    </div>
+
+    <div
+      ref="tableContainer"
+      class="table-container draggable"
+      @mousedown="handleMouseDown"
+      @mouseleave="handleMouseLeave"
+      @mouseup="handleMouseUp"
+      @mousemove="handleMouseMove"
+    >
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="column-name">Nombre del Servicio</th>
+            <th v-if="isAdmin" class="column-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="tipoServicio in filteredTiposServicios"
+            :key="tipoServicio.id_TipoServicio"
+            class="data-row"
+          >
+            <td class="column-name">
+              <div class="service-info">
+                <div class="service-avatar">
+                  {{ getServiceInitial(tipoServicio.nombre) }}
+                </div>
+                <span class="service-name">{{ tipoServicio.nombre }}</span>
+              </div>
+            </td>
+            <td v-if="isAdmin" class="column-actions">
+              <div class="action-buttons">
+                <button
+                  @click="openTipoServicioModal(tipoServicio)"
+                  class="action-button edit-button"
+                  title="Editar"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
+                    ></path>
+                    <path
+                      d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  @click="
+                    confirmDelete(
+                      tipoServicio.id_TipoServicio,
+                      tipoServicio.nombre
+                    )
+                  "
+                  class="action-button delete-button"
+                  title="Eliminar"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M3 6h18"></path>
+                    <path
+                      d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr v-if="filteredTiposServicios.length === 0" class="empty-row">
+            <td :colspan="isAdmin ? 2 : 1" class="empty-message">
+              <div class="empty-content">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="48"
+                  height="48"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1"
+                >
+                  <path
+                    d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"
+                  ></path>
+                  <path d="M13 2v7h7"></path>
+                </svg>
+                <p>No se encontraron tipos de servicio</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal para Tipos de Servicio -->
+    <div v-if="showTipoServicioModal" class="modal-backdrop">
+      <div class="modal-container" @click.stop>
+        <div class="modal-header">
+          <h2>
+            {{
+              isEditingTipoServicio
+                ? "Editar Tipo de Servicio"
+                : "Crear Nuevo Tipo de Servicio"
+            }}
+          </h2>
+          <button @click="closeTipoServicioModal" class="modal-close-button">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <form @submit.prevent="saveTipoServicio" class="modal-form">
+          <div class="form-group">
+            <label for="nombreServicio">Nombre del Servicio</label>
+            <input
+              id="nombreServicio"
+              v-model="currentTipoServicio.nombre"
+              placeholder="Ingrese el nombre del servicio"
+              required
+              class="form-input"
+            />
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              @click="closeTipoServicioModal"
+              class="modal-button cancel-button"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="modal-button save-button">
+              {{ isEditingTipoServicio ? "Actualizar" : "Crear" }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmación para Eliminar -->
+    <div v-if="showDeleteConfirmModal" class="modal-backdrop">
+      <div class="modal-container delete-confirm-modal" @click.stop>
+        <div class="modal-header delete-header">
+          <h2>Confirmar Eliminación</h2>
+          <button @click="closeDeleteConfirmModal" class="modal-close-button">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="delete-warning-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="48"
+              height="48"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              ></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <p>
+            ¿Estás seguro de que deseas eliminar
+            <strong>{{ deleteItemName }}</strong
+            >?
+          </p>
+          <p class="delete-warning">Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer">
+          <button
+            @click="closeDeleteConfirmModal"
+            class="modal-button cancel-button"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="deleteTipoServicio()"
+            class="modal-button delete-button"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sistema de notificaciones -->
+    <div class="notifications-container">
+      <div
+        v-for="(notification, index) in notifications"
+        :key="index"
+        :class="['notification', `notification-${notification.type}`]"
+      >
+        <div class="notification-icon">
+          <svg
+            v-if="notification.type === 'success'"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+            <path d="M22 4L12 14.01l-3-3"></path>
+          </svg>
+          <svg
+            v-else-if="notification.type === 'error'"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+          <svg
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="notification-content">
+          <p>{{ notification.message }}</p>
+        </div>
+        <button class="notification-close" @click="removeNotification(index)">
+          ×
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script>
 import { ref, computed, onMounted } from "vue";
 
@@ -352,363 +702,9 @@ export default {
 };
 </script>
 
-<template>
-  <div class="data-section">
-    <div class="data-cards">
-      <div class="data-card">
-        <div class="card-content">
-          <div class="card-icon services-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
-              ></path>
-              <path d="M14 2v6h6"></path>
-              <path d="M16 13H8"></path>
-              <path d="M16 17H8"></path>
-              <path d="M10 9H8"></path>
-            </svg>
-          </div>
-          <div class="card-info">
-            <h3>Total Servicios</h3>
-            <p class="card-value">{{ tiposServicios.length }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-header">
-      <div class="header-left">
-        <h1 class="page-title">Gestión de Tipos de Servicio</h1>
-        <p class="page-subtitle">
-          Total: {{ tiposServicios.length }} tipos de servicio
-        </p>
-      </div>
-      <div class="header-actions">
-        <div class="search-container">
-          <input
-            type="text"
-            placeholder="Buscar tipo de servicio..."
-            v-model="searchQuery"
-            class="search-input"
-          />
-          <span class="search-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="M21 21l-4.35-4.35"></path>
-            </svg>
-          </span>
-        </div>
-        <button
-          v-if="isAdmin"
-          @click="openTipoServicioModal(null)"
-          class="create-button"
-        >
-          <span class="button-icon">+</span>
-          <span>Nuevo Tipo</span>
-        </button>
-      </div>
-    </div>
-
-    <div
-      ref="tableContainer"
-      class="table-container draggable"
-      @mousedown="handleMouseDown"
-      @mouseleave="handleMouseLeave"
-      @mouseup="handleMouseUp"
-      @mousemove="handleMouseMove"
-    >
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th class="column-name">Nombre del Servicio</th>
-            <th v-if="isAdmin" class="column-actions">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="tipoServicio in filteredTiposServicios"
-            :key="tipoServicio.id_TipoServicio"
-            class="data-row"
-          >
-            <td class="column-name">
-              <div class="service-info">
-                <div class="service-avatar">
-                  {{ getServiceInitial(tipoServicio.nombre) }}
-                </div>
-                <span class="service-name">{{ tipoServicio.nombre }}</span>
-              </div>
-            </td>
-            <td v-if="isAdmin" class="column-actions">
-              <div class="action-buttons">
-                <button
-                  @click="openTipoServicioModal(tipoServicio)"
-                  class="action-button edit-button"
-                  title="Editar"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
-                    ></path>
-                    <path
-                      d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-                    ></path>
-                  </svg>
-                </button>
-                <button
-                  @click="
-                    confirmDelete(
-                      tipoServicio.id_TipoServicio,
-                      tipoServicio.nombre
-                    )
-                  "
-                  class="action-button delete-button"
-                  title="Eliminar"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M3 6h18"></path>
-                    <path
-                      d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
-                    ></path>
-                  </svg>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="filteredTiposServicios.length === 0" class="empty-row">
-            <td :colspan="isAdmin ? 2 : 1" class="empty-message">
-              <div class="empty-content">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="48"
-                  height="48"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1"
-                >
-                  <path
-                    d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"
-                  ></path>
-                  <path d="M13 2v7h7"></path>
-                </svg>
-                <p>No se encontraron tipos de servicio</p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Modal para Tipos de Servicio -->
-    <div v-if="showTipoServicioModal" class="modal-backdrop">
-      <div class="modal-container" @click.stop>
-        <div class="modal-header">
-          <h2>
-            {{
-              isEditingTipoServicio
-                ? "Editar Tipo de Servicio"
-                : "Crear Nuevo Tipo de Servicio"
-            }}
-          </h2>
-          <button @click="closeTipoServicioModal" class="modal-close-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <form @submit.prevent="saveTipoServicio" class="modal-form">
-          <div class="form-group">
-            <label for="nombreServicio">Nombre del Servicio</label>
-            <input
-              id="nombreServicio"
-              v-model="currentTipoServicio.nombre"
-              placeholder="Ingrese el nombre del servicio"
-              required
-              class="form-input"
-            />
-          </div>
-
-          <div class="modal-footer">
-            <button
-              type="button"
-              @click="closeTipoServicioModal"
-              class="modal-button cancel-button"
-            >
-              Cancelar
-            </button>
-            <button type="submit" class="modal-button save-button">
-              {{ isEditingTipoServicio ? "Actualizar" : "Crear" }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal de Confirmación para Eliminar -->
-    <div v-if="showDeleteConfirmModal" class="modal-backdrop">
-      <div class="modal-container delete-confirm-modal" @click.stop>
-        <div class="modal-header delete-header">
-          <h2>Confirmar Eliminación</h2>
-          <button @click="closeDeleteConfirmModal" class="modal-close-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="delete-warning-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="48"
-              height="48"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-              ></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-          </div>
-          <p>
-            ¿Estás seguro de que deseas eliminar
-            <strong>{{ deleteItemName }}</strong
-            >?
-          </p>
-          <p class="delete-warning">Esta acción no se puede deshacer.</p>
-        </div>
-        <div class="modal-footer">
-          <button
-            @click="closeDeleteConfirmModal"
-            class="modal-button cancel-button"
-          >
-            Cancelar
-          </button>
-          <button
-            @click="deleteTipoServicio()"
-            class="modal-button delete-button"
-          >
-            Eliminar
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sistema de notificaciones -->
-    <div class="notifications-container">
-      <div
-        v-for="(notification, index) in notifications"
-        :key="index"
-        :class="['notification', `notification-${notification.type}`]"
-      >
-        <div class="notification-icon">
-          <svg
-            v-if="notification.type === 'success'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-            <path d="M22 4L12 14.01l-3-3"></path>
-          </svg>
-          <svg
-            v-else-if="notification.type === 'error'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
-          </svg>
-          <svg
-            v-else
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-        </div>
-        <div class="notification-content">
-          <p>{{ notification.message }}</p>
-        </div>
-        <button class="notification-close" @click="removeNotification(index)">
-          ×
-        </button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <style scoped>
+/* Estilos para la vista de tipos de servicios */
+
 /* Estilos para el contenedor arrastrable */
 .draggable {
   cursor: grab;
@@ -719,16 +715,147 @@ export default {
   cursor: grabbing;
 }
 
+/* Estilos para el encabezado mejorado */
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Estilo de la tarjeta de Total Servicios */
+.total-clients-card {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-width: 120px;
+}
+
+.total-clients-card .card-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.total-clients-card .card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  background-color: rgba(155, 89, 182, 0.1);
+  color: #9b59b6;
+}
+
+.total-clients-card .card-info {
+  flex-grow: 1;
+}
+
+.total-clients-card h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  margin: 0 0 2px 0;
+}
+
+.total-clients-card .card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+/* Estilos para la búsqueda */
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 50px;
+  padding: 8px 16px 8px 36px;
+  width: 220px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #c1272d;
+  box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
+  width: 250px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+/* Estilo para el botón de creación */
+.create-button {
+  display: flex;
+  align-items: center;
+  background-color: #c1272d;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.create-button:hover {
+  background-color: #a01218;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button-icon {
+  margin-right: 8px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Ajuste en la tabla para mantener fijo el encabezado */
 .table-container {
   background-color: white;
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   position: relative;
-  overflow-x: auto; /* Habilita desplazamiento horizontal */
-  max-height: 70vh; /* Altura máxima para desplazamiento vertical */
-  overflow-y: auto; /* Habilita desplazamiento vertical */
+  overflow-x: auto;
+  max-height: 75vh;
+  overflow-y: auto;
 }
 
 /* Asegurarse de que la tabla tenga un ancho mínimo */
@@ -750,20 +877,10 @@ export default {
   background-color: #f8f9fa;
   color: #6c757d;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   text-align: left;
-  padding: 16px 24px;
+  padding: 12px 20px;
   border-bottom: 1px solid #dee2e6;
-}
-
-.data-table td {
-  padding: 16px 24px;
-  border-bottom: 1px solid #dee2e6;
-  font-size: 14px;
-}
-
-.data-table tr:last-child td {
-  border-bottom: none;
 }
 
 .data-row {
@@ -774,7 +891,17 @@ export default {
   background-color: rgba(0, 0, 0, 0.02);
 }
 
-/* Ajustar ancho de columnas para esta vista */
+.data-table td {
+  padding: 10px 20px;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 13px;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Ajustar anchos de columnas */
 .column-name {
   width: 70%;
 }
@@ -787,11 +914,12 @@ export default {
 .service-info {
   display: flex;
   align-items: center;
+  padding-left: 10px;
 }
 
 .service-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background-color: rgba(155, 89, 182, 0.1);
   color: #9b59b6;
@@ -800,157 +928,14 @@ export default {
   justify-content: center;
   font-weight: bold;
   margin-right: 12px;
+  font-size: 14px;
 }
 
 .service-name {
   font-weight: 600;
 }
 
-/* Estilos para tarjetas de datos */
-.data-cards {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.data-card {
-  background-color: white;
-  border-radius: 12px;
-  padding: 16px;
-  flex: 1;
-  min-width: 220px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.data-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.card-content {
-  display: flex;
-  align-items: center;
-}
-
-.card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 14px;
-}
-
-.services-icon {
-  background-color: rgba(155, 89, 182, 0.1);
-  color: #9b59b6;
-}
-
-.card-info {
-  flex-grow: 1;
-}
-
-.card-info h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #6c757d;
-  margin-bottom: 4px;
-}
-
-.card-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #2c3e50;
-}
-
-/* Estilos para el header */
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.header-left {
-  max-width: 60%;
-}
-
-.page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 8px;
-}
-
-.page-subtitle {
-  color: #6c757d;
-  font-size: 14px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 16px;
-}
-
-.search-container {
-  position: relative;
-}
-
-.search-input {
-  background-color: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 50px;
-  padding: 10px 20px 10px 40px;
-  width: 260px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #c1272d;
-  box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
-  width: 300px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-}
-
-.create-button {
-  display: flex;
-  align-items: center;
-  background-color: #c1272d;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 10px 20px;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.create-button:hover {
-  background-color: #a01218;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.button-icon {
-  margin-right: 8px;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Estilos para acciones */
+/* Acciones */
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -959,8 +944,8 @@ export default {
 .action-button {
   border: none;
   background: none;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -983,9 +968,9 @@ export default {
   color: #e74c3c;
 }
 
-/* Estilos para fila vacía */
+/* Reducir el espacio de la fila vacía */
 .empty-row {
-  height: 200px;
+  height: 160px;
 }
 
 .empty-message {
@@ -1006,7 +991,7 @@ export default {
   margin-bottom: 16px;
 }
 
-/* Estilos para modales */
+/* Modals */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -1030,6 +1015,24 @@ export default {
   overflow-y: auto;
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.3s ease;
+  position: relative;
+}
+
+/* Background logo para el modal - SVG de fondo */
+.modal-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../public/favicon.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 250px;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .modal-header {
@@ -1038,11 +1041,14 @@ export default {
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #dee2e6;
+  position: relative;
+  z-index: 1;
 }
 
 .modal-header h2 {
   font-size: 20px;
   color: #2c3e50;
+  margin: 0;
 }
 
 .modal-close-button {
@@ -1051,18 +1057,28 @@ export default {
   color: #6c757d;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
 
 .modal-close-button:hover {
   color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
 }
 
 .modal-form {
   padding: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .form-group {
   margin-bottom: 20px;
+  position: relative;
 }
 
 .form-group label {
@@ -1082,6 +1098,7 @@ export default {
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
+  background-color: #fff;
 }
 
 .form-input:focus,
@@ -1092,28 +1109,37 @@ export default {
   box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
 }
 
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
 .form-hint {
   display: block;
   margin-top: 6px;
   font-size: 12px;
   color: #6c757d;
+  text-align: right;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
-  margin: 15px;
+  padding: 15px 24px;
+  border-top: 1px solid #f5f5f5;
+  position: relative;
+  z-index: 1;
 }
 
 .modal-button {
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   border: none;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .cancel-button {
@@ -1122,8 +1148,7 @@ export default {
 }
 
 .cancel-button:hover {
-  background-color: #343a40;
-  color: white;
+  background-color: #dee2e6;
 }
 
 .save-button {
@@ -1133,6 +1158,19 @@ export default {
 
 .save-button:hover {
   background-color: #a01218;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.create-button-modal {
+  background-color: #c1272d;
+  color: white;
+}
+
+.create-button-modal:hover {
+  background-color: #a01218;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .delete-button {
@@ -1151,11 +1189,6 @@ export default {
 
 .delete-header {
   color: #e74c3c;
-}
-
-.modal-body {
-  padding: 24px;
-  text-align: center;
 }
 
 .delete-warning-icon {
@@ -1284,11 +1317,20 @@ export default {
 
   .header-actions {
     width: 100%;
-    justify-content: space-between;
+    flex-wrap: wrap;
   }
 
-  .data-card {
-    flex-basis: 100%;
+  .total-clients-card {
+    order: -1;
+    margin-bottom: 10px;
+  }
+
+  .search-container {
+    flex-grow: 1;
+  }
+
+  .search-input {
+    width: 100%;
   }
 }
 
