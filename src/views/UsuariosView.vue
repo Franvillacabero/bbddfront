@@ -1425,6 +1425,24 @@ export default {
   overflow-y: auto;
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.3s ease;
+  position: relative;
+}
+
+/* Background logo para el modal - SVG de fondo */
+.modal-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../public/favicon.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 250px;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .modal-header {
@@ -1466,6 +1484,8 @@ export default {
 
 .modal-form {
   padding: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .form-group {
@@ -1572,6 +1592,8 @@ export default {
 .modal-body {
   padding: 24px;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .delete-warning-icon {
