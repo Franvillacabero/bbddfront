@@ -988,7 +988,7 @@ export default {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 16px;
-  max-height: 300px; /* Aumentado para mostrar más clientes */
+  max-height: 190px; /* Aumentado para mostrar más clientes */
   overflow-y: auto;
 }
 
