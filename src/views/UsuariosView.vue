@@ -653,152 +653,154 @@ export default {
       </table>
     </div>
 
-    <!-- Modal para crear/editar usuario -->
-    <div v-if="showUsuarioModal" class="modal-backdrop">
-      <div class="modal-container" @click.stop>
-        <div class="modal-header">
-          <h2>
-            {{ isEditingUsuario ? "Editar Usuario" : "Crear Nuevo Usuario" }}
-          </h2>
-          <button @click="closeUsuarioModal" class="modal-close-button">
+<!-- Modal para crear/editar usuario -->
+<div v-if="showUsuarioModal" class="modal-backdrop">
+  <div class="modal-container modal-wide" @click.stop>
+    <div class="modal-header">
+      <h2>
+        {{ isEditingUsuario ? "Editar Usuario" : "Crear Nuevo Usuario" }}
+      </h2>
+      <button @click="closeUsuarioModal" class="modal-close-button">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <form @submit.prevent="saveUsuario" class="modal-form">
+      <div class="input-row">
+        <div class="form-group">
+          <label for="nombreUsuario">Nombre de Usuario</label>
+          <input
+            id="nombreUsuario"
+            v-model="currentUsuario.nombre"
+            placeholder="Ingrese el nombre del usuario"
+            required
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <div class="password-input-group">
+            <input
+              id="password"
+              v-model="currentUsuario.contraseña"
+              type="text"
+              placeholder="Ingrese la contraseña"
+              :required="!isEditingUsuario"
+              class="form-input password-input"
+            />
+            <button
+              type="button"
+              @click="generateSecurePassword"
+              class="generate-password-button"
+              title="Generar contraseña segura"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M19 7l-7 5-7-5"></path>
+                <path d="M19 12l-7 5-7-5"></path>
+              </svg>
+            </button>
+          </div>
+          <small v-if="isEditingUsuario" class="form-hint"
+            >Dejar en blanco para mantener la contraseña actual</small
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Clientes Asignados</label>
+        <div class="client-search-container">
+          <input
+            type="text"
+            v-model="clienteSearchQuery"
+            placeholder="Buscar cliente..."
+            class="form-input client-search-input"
+          />
+          <span class="client-search-icon">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              width="24"
-              height="24"
+              width="16"
+              height="16"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
             >
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
             </svg>
-          </button>
+          </span>
         </div>
-        <form @submit.prevent="saveUsuario" class="modal-form">
-          <div class="form-group">
-            <label for="nombreUsuario">Nombre de Usuario</label>
-            <input
-              id="nombreUsuario"
-              v-model="currentUsuario.nombre"
-              placeholder="Ingrese el nombre del usuario"
-              required
-              class="form-input"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="password">Contraseña</label>
-            <div class="password-input-group">
-              <input
-                id="password"
-                v-model="currentUsuario.contraseña"
-                type="text"
-                placeholder="Ingrese la contraseña"
-                :required="!isEditingUsuario"
-                class="form-input password-input"
-              />
-              <button
-                type="button"
-                @click="generateSecurePassword"
-                class="generate-password-button"
-                title="Generar contraseña segura"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M19 7l-7 5-7-5"></path>
-                  <path d="M19 12l-7 5-7-5"></path>
-                </svg>
-              </button>
-            </div>
-            <small v-if="isEditingUsuario" class="form-hint"
-              >Dejar en blanco para mantener la contraseña actual</small
+        <div class="clients-selection">
+          <p
+            v-if="sortedAndFilteredClientes.length === 0"
+            class="no-clients-message"
+          >
+            No hay clientes disponibles para asignar
+          </p>
+          <div v-else class="clients-grid">
+            <div
+              v-for="cliente in sortedAndFilteredClientes"
+              :key="cliente.id_Cliente"
+              class="client-checkbox-wrapper"
             >
-          </div>
-
-          <div class="form-group">
-            <label>Clientes Asignados</label>
-            <div class="client-search-container">
-              <input
-                type="text"
-                v-model="clienteSearchQuery"
-                placeholder="Buscar cliente..."
-                class="form-input client-search-input"
-              />
-              <span class="client-search-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="M21 21l-4.35-4.35"></path>
-                </svg>
-              </span>
-            </div>
-            <div class="clients-selection">
-              <p
-                v-if="sortedAndFilteredClientes.length === 0"
-                class="no-clients-message"
-              >
-                No hay clientes disponibles para asignar
-              </p>
-              <div v-else class="clients-grid">
-                <div
-                  v-for="cliente in sortedAndFilteredClientes"
-                  :key="cliente.id_Cliente"
-                  class="client-checkbox-wrapper"
-                >
-                  <div class="checkbox-container">
-                    <input
-                      type="checkbox"
-                      :id="`cliente-${cliente.id_Cliente}`"
-                      :checked="isClientSelected(cliente.id_Cliente)"
-                      @change="toggleClientSelection(cliente.id_Cliente)"
-                      class="custom-checkbox"
-                    />
-                    <label
-                      :for="`cliente-${cliente.id_Cliente}`"
-                      class="checkbox-label"
-                    ></label>
-                  </div>
-                  <label
-                    :for="`cliente-${cliente.id_Cliente}`"
-                    class="client-name-label"
-                  >
-                    {{ cliente.nombre_Empresa }}
-                  </label>
-                </div>
+              <div class="checkbox-container">
+                <input
+                  type="checkbox"
+                  :id="`cliente-${cliente.id_Cliente}`"
+                  :checked="isClientSelected(cliente.id_Cliente)"
+                  @change="toggleClientSelection(cliente.id_Cliente)"
+                  class="custom-checkbox"
+                />
+                <label
+                  :for="`cliente-${cliente.id_Cliente}`"
+                  class="checkbox-label"
+                ></label>
               </div>
+              <label
+                :for="`cliente-${cliente.id_Cliente}`"
+                class="client-name-label"
+              >
+                {{ cliente.nombre_Empresa }}
+              </label>
             </div>
           </div>
-
-          <div class="modal-footer">
-            <button
-              type="button"
-              @click="closeUsuarioModal"
-              class="modal-button cancel-button"
-            >
-              Cancelar
-            </button>
-            <button type="submit" class="modal-button save-button">
-              {{ isEditingUsuario ? "Actualizar" : "Crear" }}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
-    </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          @click="closeUsuarioModal"
+          class="modal-button cancel-button"
+        >
+          Cancelar
+        </button>
+        <button type="submit" class="modal-button save-button">
+          {{ isEditingUsuario ? "Actualizar" : "Crear" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
     <!-- Modal de confirmación para eliminar usuario -->
     <div v-if="showDeleteConfirmModal" class="modal-backdrop">
@@ -986,7 +988,7 @@ export default {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 16px;
-  max-height: 200px; /* Ajustado para que no sea tan alto */
+  max-height: 300px; /* Aumentado para mostrar más clientes */
   overflow-y: auto;
 }
 
@@ -1011,10 +1013,11 @@ export default {
   pointer-events: none; /* Permitir clics a través del icono */
 }
 
+/* Nueva disposición en grid con 3 columnas */
 .clients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px; /* Reducido para hacer más compacta la vista */
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas para mejor uso del espacio */
+  gap: 12px; /* Espaciado entre elementos */
 }
 
 .client-checkbox-wrapper {
@@ -1022,7 +1025,7 @@ export default {
   align-items: center;
   gap: 8px;
   transition: all 0.2s ease;
-  padding: 4px;
+  padding: 4px 8px;
   border-radius: 4px;
 }
 
@@ -1036,13 +1039,31 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 160px; /* Limitar ancho para nombres largos */
+  max-width: 180px; /* Ajustado para nombres más largos */
 }
 
 .no-clients-message {
   color: #6c757d;
   text-align: center;
   padding: 10px;
+  grid-column: span 3;
+}
+
+/* Estilo para modal más ancho */
+.modal-wide {
+  width: 800px; /* Modal más ancho para mejor visualización */
+  max-width: 90%;
+}
+
+/* Fila de inputs para nombre y contraseña */
+.input-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.input-row .form-group {
+  flex: 1;
 }
 
 /* Estilos para pantalla de acceso no autorizado */
@@ -1461,7 +1482,7 @@ export default {
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 12px 32px;
+  padding: 12px 16px;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   font-size: 14px;
@@ -1567,6 +1588,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .custom-checkbox {
@@ -1709,11 +1731,20 @@ export default {
   .search-input {
     width: 200px;
   }
+  
+  .modal-wide {
+    width: 90%;
+  }
 }
 
 @media (max-width: 768px) {
   .clients-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr); /* Cambiar a 2 columnas en pantallas medianas */
+  }
+  
+  .input-row {
+    flex-direction: column;
+    gap: 20px;
   }
 
   .content-header {
@@ -1734,12 +1765,12 @@ export default {
   .data-card {
     flex-basis: 100%;
   }
-
+  
   .modal-container {
     width: 95%;
     max-height: 85vh;
   }
-
+  
   .client-name-label {
     max-width: 220px;
   }
@@ -1759,6 +1790,10 @@ export default {
   .data-table td,
   .data-table th {
     padding: 12px 8px;
+  }
+  
+  .clients-grid {
+    grid-template-columns: 1fr; /* Una sola columna en móviles */
   }
 }
 </style>
