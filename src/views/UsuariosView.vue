@@ -986,7 +986,7 @@ export default {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 16px;
-  max-height: 300px;
+  max-height: 200px; /* Ajustado para que no sea tan alto */
   overflow-y: auto;
 }
 
@@ -997,7 +997,7 @@ export default {
 }
 
 .client-search-input {
-  padding-left: 36px;
+  padding-left: 38px; /* Aumentado para que no se cruce con el texto */
   font-size: 14px;
 }
 
@@ -1007,12 +1007,14 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   color: #6c757d;
+  z-index: 2; /* Asegurar que esté por encima del texto */
+  pointer-events: none; /* Permitir clics a través del icono */
 }
 
 .clients-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  gap: 8px; /* Reducido para hacer más compacta la vista */
 }
 
 .client-checkbox-wrapper {
@@ -1034,6 +1036,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 160px; /* Limitar ancho para nombres largos */
 }
 
 .no-clients-message {
@@ -1313,7 +1316,7 @@ export default {
   color: #e74c3c;
 }
 
-/* Reducir el espacio de la fila vacía */
+/* Estilos para fila vacía */
 .empty-row {
   height: 200px;
 }
@@ -1336,7 +1339,46 @@ export default {
   margin-bottom: 16px;
 }
 
-/* Modals */
+/* Estilos para el generador de contraseñas */
+.password-input-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.password-input {
+  flex-grow: 1;
+  padding-right: 45px; /* Espacio para el botón */
+}
+
+.generate-password-button {
+  position: absolute;
+  right: 10px;
+  border: none;
+  background-color: transparent;
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  height: 36px;
+  width: 36px;
+}
+
+.generate-password-button:hover {
+  background-color: rgba(193, 39, 45, 0.1);
+  color: #c1272d;
+}
+
+.generate-password-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Modal */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -1368,11 +1410,16 @@ export default {
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #dee2e6;
+  position: sticky; /* Mantener el encabezado visible al hacer scroll */
+  top: 0;
+  background: white;
+  z-index: 5;
 }
 
 .modal-header h2 {
   font-size: 20px;
   color: #2c3e50;
+  margin: 0;
 }
 
 .modal-close-button {
@@ -1381,10 +1428,17 @@ export default {
   color: #6c757d;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
 
 .modal-close-button:hover {
   color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
 }
 
 .modal-form {
@@ -1422,6 +1476,11 @@ export default {
   box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
 }
 
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
 .form-hint {
   display: block;
   margin-top: 6px;
@@ -1433,17 +1492,22 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
-  margin: 15px;
+  padding: 15px 24px;
+  border-top: 1px solid #f5f5f5;
+  position: sticky; /* Mantener el footer visible al hacer scroll */
+  bottom: 0;
+  background: white;
+  z-index: 5;
 }
 
 .modal-button {
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   border: none;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .cancel-button {
@@ -1452,8 +1516,7 @@ export default {
 }
 
 .cancel-button:hover {
-  background-color: #343a40;
-  color: white;
+  background-color: #dee2e6;
 }
 
 .save-button {
@@ -1499,46 +1562,7 @@ export default {
   margin-top: 8px;
 }
 
-/* Estilos para el generador de contraseñas */
-.password-input-group {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.password-input {
-  flex-grow: 1;
-  padding-right: 45px; /* Espacio para el botón */
-}
-
-.generate-password-button {
-  position: absolute;
-  right: 10px;
-  border: none;
-  background-color: transparent;
-  color: #6c757d;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  height: 36px;
-  width: 36px;
-}
-
-.generate-password-button:hover {
-  background-color: rgba(193, 39, 45, 0.1);
-  color: #c1272d;
-}
-
-.generate-password-button svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* Estilos para checkboxes */
+/* Estilo para checkboxes */
 .checkbox-container {
   display: flex;
   justify-content: center;
@@ -1709,6 +1733,15 @@ export default {
 
   .data-card {
     flex-basis: 100%;
+  }
+
+  .modal-container {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .client-name-label {
+    max-width: 220px;
   }
 }
 
