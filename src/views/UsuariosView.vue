@@ -11,6 +11,8 @@ export default {
   setup(props) {
     // Estado para búsqueda
     const searchQuery = ref("");
+    // Estado para búsqueda de clientes dentro del modal
+    const clienteSearchQuery = ref("");
 
     // Estado para Usuarios
     const usuarios = ref([]);
@@ -81,6 +83,22 @@ export default {
       }
     };
 
+    // Ordenar y filtrar clientes alfabéticamente según la búsqueda
+    const sortedAndFilteredClientes = computed(() => {
+      const query = clienteSearchQuery.value.toLowerCase().trim();
+      let filteredClientes = clientesDisponibles.value;
+
+      if (query) {
+        filteredClientes = filteredClientes.filter((cliente) =>
+          cliente.nombre_Empresa.toLowerCase().includes(query)
+        );
+      }
+
+      return [...filteredClientes].sort((a, b) =>
+        a.nombre_Empresa.localeCompare(b.nombre_Empresa)
+      );
+    });
+
     // Notificaciones
     const notifications = ref([]);
     const showNotification = (message, type = "info") => {
@@ -142,6 +160,9 @@ export default {
 
       // Cargar los clientes disponibles
       fetchClientesDisponibles();
+
+      // Resetear búsqueda de clientes
+      clienteSearchQuery.value = "";
 
       if (usuario) {
         // Para edición, clonar el usuario pero resetear contraseña
@@ -265,6 +286,7 @@ export default {
     // Cerrar modal de Usuario
     const closeUsuarioModal = () => {
       showUsuarioModal.value = false;
+      clienteSearchQuery.value = ""; // Limpiar búsqueda al cerrar
     };
 
     // Método de confirmación de eliminación
@@ -421,6 +443,7 @@ export default {
     return {
       // Estado
       searchQuery,
+      clienteSearchQuery,
       usuarios,
       filteredUsuarios,
       showUsuarioModal,
@@ -430,6 +453,7 @@ export default {
       deleteItemName,
       notifications,
       clientesDisponibles,
+      sortedAndFilteredClientes,
 
       // Métodos
       openUsuarioModal,
@@ -701,16 +725,38 @@ export default {
 
           <div class="form-group">
             <label>Clientes Asignados</label>
+            <div class="client-search-container">
+              <input
+                type="text"
+                v-model="clienteSearchQuery"
+                placeholder="Buscar cliente..."
+                class="form-input client-search-input"
+              />
+              <span class="client-search-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+              </span>
+            </div>
             <div class="clients-selection">
               <p
-                v-if="clientesDisponibles.length === 0"
+                v-if="sortedAndFilteredClientes.length === 0"
                 class="no-clients-message"
               >
                 No hay clientes disponibles para asignar
               </p>
               <div v-else class="clients-grid">
                 <div
-                  v-for="cliente in clientesDisponibles"
+                  v-for="cliente in sortedAndFilteredClientes"
                   :key="cliente.id_Cliente"
                   class="client-checkbox-wrapper"
                 >
@@ -940,8 +986,27 @@ export default {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 16px;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
+}
+
+/* Buscador de clientes dentro del modal */
+.client-search-container {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.client-search-input {
+  padding-left: 36px;
+  font-size: 14px;
+}
+
+.client-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
 }
 
 .clients-grid {
@@ -954,11 +1019,21 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: all 0.2s ease;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.client-checkbox-wrapper:hover {
+  background-color: rgba(193, 39, 45, 0.05);
 }
 
 .client-name-label {
   font-size: 14px;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .no-clients-message {
@@ -1238,7 +1313,7 @@ export default {
   color: #e74c3c;
 }
 
-/* Estilos para fila vacía */
+/* Reducir el espacio de la fila vacía */
 .empty-row {
   height: 200px;
 }
@@ -1261,7 +1336,7 @@ export default {
   margin-bottom: 16px;
 }
 
-/* Estilos para modales */
+/* Modals */
 .modal-backdrop {
   position: fixed;
   top: 0;
