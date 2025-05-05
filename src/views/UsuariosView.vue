@@ -1420,7 +1420,6 @@ export default {
 .modal-container {
   background-color: white;
   border-radius: 16px;
-  width: 500px;
   max-width: 90%;
   max-height: 90vh;
   overflow-y: auto;
@@ -1485,7 +1484,7 @@ export default {
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 12px 16px;
+  padding: 12px 32px;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   font-size: 14px;
