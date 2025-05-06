@@ -1183,10 +1183,52 @@ export default {
 
     <div class="content-header">
       <div class="header-left">
-        <h1 class="page-title">Gestión de Registros</h1>
-        <p class="page-subtitle">
-          Total: {{ registros.length }} registros de actividad
-        </p>
+        <div class="header-title-container">
+          <h1 class="page-title">Gestión de Registros</h1>
+          <div class="header-cards">
+            <div class="header-card">
+              <div class="card-icon logs-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div class="card-info">
+                <span class="card-label">Total</span>
+                <span class="card-value">{{ registros.length }}</span>
+              </div>
+            </div>
+            <div class="header-card">
+              <div class="card-icon today-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <div class="card-info">
+                <span class="card-label">Hoy</span>
+                <span class="card-value">{{ getTodayRegistrosCount() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="header-actions">
         <div class="search-container">
@@ -2094,7 +2136,113 @@ export default {
   </div>
 </template>
 
-<style scoped>
+<style>
+/* Estilos para la vista de registros */
+
+/* Nuevos estilos para el encabezado */
+.header-title-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.header-cards {
+  display: flex;
+  gap: 16px;
+}
+
+.header-card {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 10px;
+  padding: 10px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-card .card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.header-card .card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-card .card-label {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 2px;
+}
+
+.header-card .card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.logs-icon {
+  background-color: rgba(243, 156, 18, 0.1);
+  color: #f39c12;
+}
+
+.today-icon {
+  background-color: rgba(26, 188, 156, 0.1);
+  color: #1abc9c;
+}
+
+/* Ajuste de los contadores en una línea compacta como en las otras páginas */
+.total-clients-card {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-width: 150px;
+  margin-right: 10px;
+}
+
+.total-clients-card .card-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.total-clients-card .card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+
+.total-clients-card .card-info {
+  flex-grow: 1;
+}
+
+.total-clients-card h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  margin: 0 0 2px 0;
+}
+
+.total-clients-card .card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
 /* Estilos para el generador de contraseñas */
 .password-input-group {
   display: flex;
@@ -2134,6 +2282,22 @@ export default {
   height: 18px;
 }
 
+/* Estilos para el modal más grande */
+.modal-large {
+  width: 700px;
+  max-width: 90%;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
 /* Estilos para URLs, ISP y BBDD */
 .url-cell,
 .isp-cell,
@@ -2158,15 +2322,6 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Botones de copiar siempre visibles */
-.url-cell .copy-button,
-.isp-cell .copy-button,
-.bbdd-cell .copy-button,
-.user-info-cell .copy-button {
-  opacity: 1;
-  visibility: visible;
 }
 
 /* Estilos para la celda de notas y botón de visualización */
@@ -2238,22 +2393,6 @@ export default {
   cursor: grabbing;
 }
 
-/* Ajustes para el modal */
-.modal-large {
-  width: 700px;
-  max-width: 90%;
-}
-
-.form-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.form-row .form-group {
-  flex: 1;
-}
-
 /* Ajustes de columnas para la tabla */
 .column-url {
   width: 150px;
@@ -2271,18 +2410,98 @@ export default {
   width: 150px;
 }
 
-/* Quitar el avatar de iniciales del usuario */
-.user-info-cell {
-  display: flex;
-  align-items: center;
+/* Nuevo estilo para el buscador en selección de cliente y servicio */
+.selector-with-search {
   position: relative;
-  padding: 8px 0;
+  width: 100%;
 }
 
-.user-name-cell {
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-in-modal {
+  padding-left: 36px; /* Espacio para el ícono */
+}
+
+.search-icon-modal {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+.search-results-wrapper {
+  position: relative;
+  margin-top: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+}
+
+.search-results {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+}
+
+.search-result-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.search-result-item:hover {
+  background-color: #f8f9fa;
+}
+
+.search-result-item.selected {
+  background-color: rgba(193, 39, 45, 0.1);
+  color: #c1272d;
   font-weight: 600;
-  margin-right: 8px;
-  flex-grow: 1;
+}
+
+.search-no-results {
+  padding: 15px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.selected-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: rgba(193, 39, 45, 0.05);
+  border-radius: 8px;
+  color: #c1272d;
+  font-weight: 600;
+}
+
+.clear-selection {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 18px;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.clear-selection:hover {
+  background-color: rgba(193, 39, 45, 0.1);
+  color: #c1272d;
 }
 
 /* Estilos responsivos para la tabla */
@@ -2306,6 +2525,21 @@ export default {
 }
 
 @media (max-width: 768px) {
+  .header-title-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-cards {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .header-card {
+    flex-basis: 48%;
+  }
+
   .form-row {
     flex-direction: column;
     gap: 8px;
@@ -2313,6 +2547,29 @@ export default {
 
   .modal-large {
     width: 95%;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .total-clients-card {
+    flex-basis: 48%; /* Para que quepa 2 por fila en móvil */
+    margin-right: 0;
+  }
+
+  .search-container {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .create-button {
+    margin-top: 10px;
   }
 }
 
