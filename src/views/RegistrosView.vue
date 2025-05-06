@@ -1133,54 +1133,6 @@ export default {
 
 <template>
   <div class="data-section">
-    <div class="data-cards">
-      <div class="data-card">
-        <div class="card-content">
-          <div class="card-icon logs-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <div class="card-info">
-            <h3>Total Registros</h3>
-            <p class="card-value">{{ registros.length }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="data-card">
-        <div class="card-content">
-          <div class="card-icon today-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-          </div>
-          <div class="card-info">
-            <h3>Registros Hoy</h3>
-            <p class="card-value">{{ getTodayRegistrosCount() }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="content-header">
       <div class="header-left">
         <div class="header-title-container">
@@ -2575,10 +2527,9 @@ export default {
 
 /* Ajuste en la tabla para mantener fijo el encabezado */
 .table-container {
-  max-height: 70vh;
-  overflow-y: auto;
+  max-height: 57vh;
+  overflow: auto;
   position: relative;
-  margin-bottom: 20px;
   border-radius: 16px;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
