@@ -2291,9 +2291,9 @@ export default {
   height: 18px;
 }
 
-/* Estilos para el modal más grande */
+/* Estilos para el modal más grande - AUMENTADO A 900px */
 .modal-large {
-  width: 850px;
+  width: 900px;
   max-width: 95%;
 }
 
@@ -2305,6 +2305,13 @@ export default {
 
 .form-row .form-group {
   flex: 1;
+  min-width: 180px; /* Asegurar un ancho mínimo para evitar que se corten etiquetas */
+}
+
+/* Hacer que las etiquetas nunca se corten */
+.form-group label {
+  white-space: nowrap;
+  overflow: visible;
 }
 
 /* Estilos para URLs, ISP y BBDD */
@@ -2514,10 +2521,19 @@ export default {
   color: #c1272d;
 }
 
-/* Hacer que el select de tipo de servicio tenga overflow */
+/* Hacer que el select de tipo de servicio tenga overflow - CORREGIDO */
 .service-select-overflow {
-  max-height: 38px;
-  overflow-y: auto;
+  height: 38px;
+}
+
+/* Estilo para el dropdown con scrollbar interno */
+.form-select option {
+  padding: 5px;
+}
+
+select.form-select {
+  overflow-y: auto !important;
+  max-height: 150px !important; /* Altura máxima visible */
 }
 
 /* Background logo para el modal - SVG de fondo */
