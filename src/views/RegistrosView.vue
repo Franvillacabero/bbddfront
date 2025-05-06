@@ -14,6 +14,7 @@ export default {
 
     // Estados
     const searchQuery = ref("");
+    const clienteSearchQuery = ref(""); // Nueva ref para búsqueda de clientes en el modal
     const registros = ref([]);
     const registrosDesencriptados = ref([]);
     const registroTipoServicioFiltro = ref("todos");
@@ -444,6 +445,16 @@ export default {
       return result;
     });
 
+    // Filtrar clientes para el modal
+    const filteredClientes = computed(() => {
+      const query = clienteSearchQuery.value.toLowerCase().trim();
+      if (!query) return sortedClientes.value;
+
+      return sortedClientes.value.filter((cliente) =>
+        cliente.nombre_Empresa.toLowerCase().includes(query)
+      );
+    });
+
     // Métodos para contraseñas
     const togglePasswordVisibility = async (registroId) => {
       if (!passwordVisibility.value[registroId]) {
@@ -870,6 +881,9 @@ export default {
         return;
       }
 
+      // Resetear la búsqueda de clientes
+      clienteSearchQuery.value = "";
+
       if (registro) {
         // Para edición: copiar datos pero limpiar la contraseña
         currentRegistro.value = {
@@ -1037,13 +1051,6 @@ export default {
       closeDeleteConfirmModal();
     };
 
-    // Cargar datos al montar el componente
-    onMounted(() => {
-      fetchClientes();
-      fetchTiposServicios();
-      fetchRegistros();
-    });
-
     // Valores para filtros de cliente y servicio
     const sortedClientes = computed(() => {
       return [...clientes.value].sort((a, b) =>
@@ -1057,12 +1064,21 @@ export default {
       );
     });
 
+    // Cargar datos al montar el componente
+    onMounted(() => {
+      fetchClientes();
+      fetchTiposServicios();
+      fetchRegistros();
+    });
+
     return {
       // Estados
       searchQuery,
+      clienteSearchQuery,
       registros,
       registrosDesencriptados,
       filteredRegistros,
+      filteredClientes,
       registroTipoServicioFiltro,
       registroClienteFiltro,
       registroOrden,
@@ -1130,7 +1146,6 @@ export default {
   },
 };
 </script>
-
 <template>
   <div class="data-section">
     <div class="content-header">
@@ -1769,24 +1784,66 @@ export default {
         <form @submit.prevent="saveRegistro" class="modal-form">
           <div class="form-row">
             <div class="form-group">
-              <label for="clienteSelect">Cliente</label>
-              <select
-                id="clienteSelect"
-                v-model="currentRegistro.id_Cliente"
-                required
-                class="form-select"
-              >
-                <option value="" disabled selected>
-                  Seleccione un cliente
-                </option>
-                <option
-                  v-for="cliente in sortedClientes"
-                  :key="cliente.id_Cliente"
-                  :value="cliente.id_Cliente"
+              <label for="clienteSearch">Cliente</label>
+              <div class="selector-with-search">
+                <div class="search-input-wrapper">
+                  <input
+                    type="text"
+                    v-model="clienteSearchQuery"
+                    class="form-input search-in-modal"
+                    placeholder="Buscar cliente..."
+                  />
+                  <span class="search-icon-modal">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                  </span>
+                </div>
+                <div
+                  class="search-results-wrapper"
+                  v-if="clienteSearchQuery.trim()"
                 >
-                  {{ cliente.nombre_Empresa }}
-                </option>
-              </select>
+                  <div class="search-results">
+                    <div
+                      v-for="cliente in filteredClientes"
+                      :key="cliente.id_Cliente"
+                      class="search-result-item"
+                      :class="{
+                        selected:
+                          currentRegistro.id_Cliente == cliente.id_Cliente,
+                      }"
+                      @click="currentRegistro.id_Cliente = cliente.id_Cliente"
+                    >
+                      {{ cliente.nombre_Empresa }}
+                    </div>
+                    <div
+                      v-if="filteredClientes.length === 0"
+                      class="search-no-results"
+                    >
+                      No se encontraron resultados
+                    </div>
+                  </div>
+                </div>
+                <div v-if="currentRegistro.id_Cliente" class="selected-item">
+                  {{ getClienteName(currentRegistro.id_Cliente) }}
+                  <button
+                    type="button"
+                    @click="currentRegistro.id_Cliente = ''"
+                    class="clear-selection"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div class="form-group">
@@ -1795,7 +1852,7 @@ export default {
                 id="servicioSelect"
                 v-model="currentRegistro.id_TipoServicio"
                 required
-                class="form-select"
+                class="form-select service-select-overflow"
               >
                 <option value="" disabled selected>
                   Seleccione un tipo de servicio
@@ -2236,8 +2293,8 @@ export default {
 
 /* Estilos para el modal más grande */
 .modal-large {
-  width: 700px;
-  max-width: 90%;
+  width: 850px;
+  max-width: 95%;
 }
 
 .form-row {
@@ -2398,6 +2455,7 @@ export default {
   max-height: 200px;
   overflow-y: auto;
   background-color: white;
+  z-index: 5;
 }
 
 .search-result-item {
@@ -2454,6 +2512,29 @@ export default {
 .clear-selection:hover {
   background-color: rgba(193, 39, 45, 0.1);
   color: #c1272d;
+}
+
+/* Hacer que el select de tipo de servicio tenga overflow */
+.service-select-overflow {
+  max-height: 38px;
+  overflow-y: auto;
+}
+
+/* Background logo para el modal - SVG de fondo */
+.modal-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../public/favicon.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 250px;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Estilos responsivos para la tabla */
