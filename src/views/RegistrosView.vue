@@ -14,7 +14,8 @@ export default {
 
     // Estados
     const searchQuery = ref("");
-    const clienteSearchQuery = ref(""); // Nueva ref para búsqueda de clientes en el modal
+    const clienteSearchQuery = ref(""); // Para búsqueda de clientes en el modal
+    const servicioSearchQuery = ref(""); // Para búsqueda de tipos de servicio en el modal
     const registros = ref([]);
     const registrosDesencriptados = ref([]);
     const registroTipoServicioFiltro = ref("todos");
@@ -455,6 +456,16 @@ export default {
       );
     });
 
+    // Filtrar tipos de servicio para el modal
+    const filteredServicios = computed(() => {
+      const query = servicioSearchQuery.value.toLowerCase().trim();
+      if (!query) return sortedTiposServicios.value;
+
+      return sortedTiposServicios.value.filter((servicio) =>
+        servicio.nombre.toLowerCase().includes(query)
+      );
+    });
+
     // Métodos para contraseñas
     const togglePasswordVisibility = async (registroId) => {
       if (!passwordVisibility.value[registroId]) {
@@ -881,8 +892,9 @@ export default {
         return;
       }
 
-      // Resetear la búsqueda de clientes
+      // Resetear la búsqueda de clientes y servicios
       clienteSearchQuery.value = "";
+      servicioSearchQuery.value = "";
 
       if (registro) {
         // Para edición: copiar datos pero limpiar la contraseña
@@ -1075,10 +1087,12 @@ export default {
       // Estados
       searchQuery,
       clienteSearchQuery,
+      servicioSearchQuery,
       registros,
       registrosDesencriptados,
       filteredRegistros,
       filteredClientes,
+      filteredServicios,
       registroTipoServicioFiltro,
       registroClienteFiltro,
       registroOrden,
@@ -1829,25 +1843,54 @@ export default {
             </div>
 
             <div class="form-group">
-              <label for="servicioSelect">Tipo de Servicio</label>
-              <select
-                id="servicioSelect"
-                v-model="currentRegistro.id_TipoServicio"
-                required
-                class="form-select"
-                size="1"
-              >
-                <option value="" disabled selected>
-                  Seleccione un tipo de servicio
-                </option>
-                <option
-                  v-for="servicio in sortedTiposServicios"
-                  :key="servicio.id_TipoServicio"
-                  :value="servicio.id_TipoServicio"
+              <label for="servicioSearch">Tipo de Servicio</label>
+              <div class="selector-with-search">
+                <input
+                  type="text"
+                  v-model="servicioSearchQuery"
+                  class="form-input"
+                  placeholder="Buscar tipo de servicio..."
+                />
+                <div
+                  class="search-results-simple"
+                  v-if="servicioSearchQuery.trim()"
                 >
-                  {{ servicio.nombre }}
-                </option>
-              </select>
+                  <div
+                    v-for="servicio in filteredServicios"
+                    :key="servicio.id_TipoServicio"
+                    class="search-result-item"
+                    :class="{
+                      selected:
+                        currentRegistro.id_TipoServicio ==
+                        servicio.id_TipoServicio,
+                    }"
+                    @click="
+                      currentRegistro.id_TipoServicio = servicio.id_TipoServicio
+                    "
+                  >
+                    {{ servicio.nombre }}
+                  </div>
+                  <div
+                    v-if="filteredServicios.length === 0"
+                    class="search-no-results"
+                  >
+                    No se encontraron resultados
+                  </div>
+                </div>
+                <div
+                  v-if="currentRegistro.id_TipoServicio"
+                  class="selected-item"
+                >
+                  {{ getServicioName(currentRegistro.id_TipoServicio) }}
+                  <button
+                    type="button"
+                    @click="currentRegistro.id_TipoServicio = ''"
+                    class="clear-selection"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
