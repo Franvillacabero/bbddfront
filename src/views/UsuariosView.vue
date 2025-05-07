@@ -145,9 +145,17 @@ export default {
 
     // Método para obtener nombre de cliente
     const getClienteName = (id) => {
-      if (!id) return "N/A";
+      if (!id) return "";
       const cliente = clientesDisponibles.value.find((c) => c.id_Cliente == id);
-      return cliente ? cliente.nombre_Empresa : `Cliente #${id}`;
+      return cliente ? cliente.nombre_Empresa : "";
+    };
+
+    // Método para filtrar clientes válidos
+    const getValidClientes = (clienteIds) => {
+      if (!clienteIds || !Array.isArray(clienteIds)) return [];
+      return clienteIds.filter((clienteId) =>
+        clientesDisponibles.value.some((c) => c.id_Cliente == clienteId)
+      );
     };
 
     // Método para abrir modal de Usuario
@@ -472,6 +480,7 @@ export default {
       // Utilidades
       getUserInitial,
       getClienteName,
+      getValidClientes,
     };
   },
 };
@@ -567,11 +576,14 @@ export default {
             <td class="column-clients">
               <div class="clients-list">
                 <div
-                  v-if="usuario.clientes && usuario.clientes.length > 0"
+                  v-if="
+                    usuario.clientes &&
+                    getValidClientes(usuario.clientes).length > 0
+                  "
                   class="client-tags"
                 >
                   <span
-                    v-for="clienteId in usuario.clientes"
+                    v-for="clienteId in getValidClientes(usuario.clientes)"
                     :key="clienteId"
                     class="client-tag"
                   >
