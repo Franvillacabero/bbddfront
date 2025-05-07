@@ -2305,7 +2305,7 @@ export default {
 
 .form-row .form-group {
   flex: 1;
-  min-width: 180px; /* Asegurar un ancho mínimo para evitar que se corten etiquetas */
+  min-width: 200px; /* Asegurar un ancho mínimo para evitar que se corten etiquetas */
 }
 
 /* Hacer que las etiquetas nunca se corten */
@@ -2437,18 +2437,6 @@ export default {
   width: 100%;
 }
 
-.search-in-modal {
-  padding-left: 36px; /* Espacio para el ícono */
-}
-
-.search-icon-modal {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-}
-
 .search-results-wrapper {
   position: relative;
   margin-top: 5px;
@@ -2521,19 +2509,41 @@ export default {
   color: #c1272d;
 }
 
-/* Hacer que el select de tipo de servicio tenga overflow - CORREGIDO */
-.service-select-overflow {
-  height: 38px;
+/* Corrección para el dropdown limitado en altura */
+.dropdown-height-limited {
+  height: auto;
 }
 
-/* Estilo para el dropdown con scrollbar interno */
-.form-select option {
-  padding: 5px;
+/* Esta es la clave: limitar la altura del dropdown (parte que se despliega) */
+select.dropdown-height-limited option {
+  max-height: 200px;
 }
 
-select.form-select {
-  overflow-y: auto !important;
-  max-height: 150px !important; /* Altura máxima visible */
+/* Este estilo hace que el dropdown tenga altura limitada en navegadores modernos */
+select.dropdown-height-limited {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23131313%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem top 50%;
+  background-size: 0.65rem auto;
+  padding-right: 1.5rem;
+}
+
+/* Para Firefox específicamente */
+@-moz-document url-prefix() {
+  select.dropdown-height-limited {
+    height: 38px;
+    overflow: auto;
+  }
+}
+
+/* Para Chrome específicamente */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  select.dropdown-height-limited {
+    height: 38px;
+  }
 }
 
 /* Background logo para el modal - SVG de fondo */
