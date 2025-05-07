@@ -1790,23 +1790,9 @@ export default {
                   <input
                     type="text"
                     v-model="clienteSearchQuery"
-                    class="form-input search-in-modal"
+                    class="form-input"
                     placeholder="Buscar cliente..."
                   />
-                  <span class="search-icon-modal">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="16"
-                      height="16"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <path d="M21 21l-4.35-4.35"></path>
-                    </svg>
-                  </span>
                 </div>
                 <div
                   class="search-results-wrapper"
@@ -1852,7 +1838,7 @@ export default {
                 id="servicioSelect"
                 v-model="currentRegistro.id_TipoServicio"
                 required
-                class="form-select service-select-overflow"
+                class="form-select dropdown-height-limited"
               >
                 <option value="" disabled selected>
                   Seleccione un tipo de servicio
