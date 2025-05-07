@@ -286,65 +286,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Sistema de notificaciones -->
-    <div class="notifications-container">
-      <div
-        v-for="(notification, index) in notifications"
-        :key="index"
-        :class="['notification', `notification-${notification.type}`]"
-      >
-        <div class="notification-icon">
-          <svg
-            v-if="notification.type === 'success'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-            <path d="M22 4L12 14.01l-3-3"></path>
-          </svg>
-          <svg
-            v-else-if="notification.type === 'error'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
-          </svg>
-          <svg
-            v-else
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-        </div>
-        <div class="notification-content">
-          <p>{{ notification.message }}</p>
-        </div>
-        <button class="notification-close" @click="removeNotification(index)">
-          ×
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -416,9 +357,6 @@ export default {
     const deleteItemId = ref(null);
     const deleteItemName = ref("");
 
-    // Notificaciones
-    const notifications = ref([]);
-
     // Cargar tipos de servicio
     const fetchTiposServicios = async () => {
       try {
@@ -435,34 +373,9 @@ export default {
         }
 
         tiposServicios.value = await response.json();
-        showNotification("Tipos de servicio cargados correctamente", "info");
+        console.log("Tipos de servicio cargados correctamente");
       } catch (error) {
         console.error("Error al cargar tipos de servicio:", error);
-        showNotification("Error al cargar los tipos de servicio", "error");
-      }
-    };
-
-    // Método de notificación
-    const showNotification = (message, type = "info") => {
-      const notification = {
-        message,
-        type,
-        id: Date.now(),
-      };
-
-      notifications.value.push(notification);
-
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        removeNotification(
-          notifications.value.findIndex((n) => n.id === notification.id)
-        );
-      }, 5000);
-    };
-
-    const removeNotification = (index) => {
-      if (index !== -1) {
-        notifications.value.splice(index, 1);
       }
     };
 
@@ -495,7 +408,7 @@ export default {
     const openTipoServicioModal = (tipoServicio) => {
       // Solo admin puede abrir modal de tipos de servicio
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -516,7 +429,7 @@ export default {
     const saveTipoServicio = async () => {
       // Solo admin puede crear/editar tipos de servicio
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -553,17 +466,13 @@ export default {
         await fetchTiposServicios();
         closeTipoServicioModal();
 
-        const message = isEditingTipoServicio.value
-          ? `Tipo de servicio "${tipoServicioData.nombre}" actualizado con éxito`
-          : `Tipo de servicio "${tipoServicioData.nombre}" creado con éxito`;
-
-        showNotification(message, "success");
+        console.log(
+          isEditingTipoServicio.value
+            ? `Tipo de servicio "${tipoServicioData.nombre}" actualizado con éxito`
+            : `Tipo de servicio "${tipoServicioData.nombre}" creado con éxito`
+        );
       } catch (error) {
         console.error("Error:", error);
-        showNotification(
-          `Error al guardar el tipo de servicio: ${error.message}`,
-          "error"
-        );
       }
     };
 
@@ -579,14 +488,13 @@ export default {
 
       // Solo admin puede eliminar tipos de servicio
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
       // Validación más estricta del ID
       if (deleteItemId.value === null || deleteItemId.value === undefined) {
         console.error("ID de tipo de servicio no válido");
-        showNotification("ID de tipo de servicio no válido", "error");
         return;
       }
 
@@ -624,17 +532,11 @@ export default {
         // Cerrar modal de confirmación
         closeDeleteConfirmModal();
 
-        // Mostrar notificación de éxito
-        showNotification(
-          `Tipo de servicio "${deleteItemName.value}" eliminado con éxito`,
-          "success"
+        console.log(
+          `Tipo de servicio "${deleteItemName.value}" eliminado con éxito`
         );
       } catch (error) {
         console.error("Error completo al eliminar:", error);
-        showNotification(
-          `Error al eliminar el tipo de servicio: ${error.message}`,
-          "error"
-        );
       }
     };
 
@@ -644,7 +546,7 @@ export default {
 
       // Solo admin puede confirmar eliminación
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -674,7 +576,6 @@ export default {
       currentTipoServicio,
       showDeleteConfirmModal,
       deleteItemName,
-      notifications,
       tableContainer,
       isDragging,
 
@@ -692,8 +593,6 @@ export default {
       confirmDelete,
       closeDeleteConfirmModal,
       fetchTiposServicios,
-      showNotification,
-      removeNotification,
 
       // Utilidades
       getServiceInitial,
@@ -1202,65 +1101,6 @@ export default {
   margin-top: 8px;
 }
 
-/* Sistema de notificaciones */
-.notifications-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 350px;
-}
-
-.notification {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  animation: slideInRight 0.3s ease;
-}
-
-.notification-success {
-  background-color: #2ecc71;
-}
-
-.notification-error {
-  background-color: #e74c3c;
-}
-
-.notification-info {
-  background-color: #3498db;
-}
-
-.notification-warning {
-  background-color: #f39c12;
-}
-
-.notification-icon {
-  margin-right: 16px;
-}
-
-.notification-content {
-  flex-grow: 1;
-}
-
-.notification-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 20px;
-  opacity: 0.7;
-  cursor: pointer;
-}
-
-.notification-close:hover {
-  opacity: 1;
-}
-
 /* Animaciones */
 @keyframes fadeIn {
   from {
@@ -1278,17 +1118,6 @@ export default {
   }
   to {
     transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
     opacity: 1;
   }
 }

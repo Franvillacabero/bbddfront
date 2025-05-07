@@ -25,7 +25,6 @@ export default {
     const isEditingRegistro = ref(false);
     const clientes = ref([]);
     const tiposServicios = ref([]);
-    const notifications = ref([]);
     const tableContainer = ref(null);
     const isDragging = ref(false);
     const startX = ref(0);
@@ -105,30 +104,6 @@ export default {
       return notas && notas.trim() !== "";
     };
 
-    // Notificación
-    const showNotification = (message, type = "info") => {
-      const notification = {
-        message,
-        type,
-        id: Date.now(),
-      };
-
-      notifications.value.push(notification);
-
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        removeNotification(
-          notifications.value.findIndex((n) => n.id === notification.id)
-        );
-      }, 5000);
-    };
-
-    const removeNotification = (index) => {
-      if (index !== -1) {
-        notifications.value.splice(index, 1);
-      }
-    };
-
     // Generador de contraseñas seguras
     const generateSecurePassword = () => {
       const length = 18; // Aumentamos la longitud para mayor seguridad
@@ -171,9 +146,6 @@ export default {
 
       // Actualizar el estado
       currentRegistro.value.contraseña = password;
-
-      // Mostrar notificación
-      showNotification("Contraseña segura generada", "success");
     };
 
     // Cargar clientes y tipos de servicio
@@ -215,7 +187,6 @@ export default {
         }
       } catch (error) {
         console.error("Error al cargar clientes:", error);
-        showNotification("Error al cargar los clientes", "error");
       }
     };
 
@@ -236,7 +207,6 @@ export default {
         tiposServicios.value = await response.json();
       } catch (error) {
         console.error("Error al cargar tipos de servicio:", error);
-        showNotification("Error al cargar los tipos de servicio", "error");
       }
     };
 
@@ -254,7 +224,6 @@ export default {
         return registrosConPasswordDesencriptado;
       } catch (error) {
         console.error("Error al preparar registros:", error);
-        showNotification("Error al procesar registros", "error");
         return registrosEncriptados.map((registro) => ({
           ...registro,
           contraseñaDesencriptada: "",
@@ -313,11 +282,8 @@ export default {
         registrosDesencriptados.value = await desencriptarRegistros(
           registros.value
         );
-
-        showNotification("Registros cargados correctamente", "info");
       } catch (error) {
         console.error("Error al cargar registros:", error);
-        showNotification("Error al cargar los registros", "error");
       }
     };
 
@@ -494,7 +460,6 @@ export default {
           }
         } catch (error) {
           console.error("Error al obtener contraseña:", error);
-          showNotification("Error al obtener la contraseña", "error");
         }
       }
 
@@ -526,10 +491,7 @@ export default {
     const exportToExcel = async () => {
       try {
         if (selectedRegistros.value.length === 0) {
-          showNotification(
-            "Selecciona al menos un registro para exportar",
-            "warning"
-          );
+          console.log("Selecciona al menos un registro para exportar");
           return;
         }
 
@@ -601,13 +563,11 @@ export default {
           `registros_netymedia_${new Date().toISOString().split("T")[0]}.xlsx`
         );
 
-        showNotification(
-          `${selectedRegistros.value.length} registros exportados con éxito`,
-          "success"
+        console.log(
+          `${selectedRegistros.value.length} registros exportados con éxito`
         );
       } catch (error) {
         console.error("Error al exportar a Excel:", error);
-        showNotification("Error al exportar los registros", "error");
       }
     };
 
@@ -615,10 +575,7 @@ export default {
     const copySelectedRegistros = async () => {
       try {
         if (selectedRegistros.value.length === 0) {
-          showNotification(
-            "Selecciona al menos un registro para copiar",
-            "warning"
-          );
+          console.log("Selecciona al menos un registro para copiar");
           return;
         }
 
@@ -708,16 +665,11 @@ export default {
         };
 
         await copyText(clipboardText);
-        showNotification(
-          `${selectedRegistros.value.length} registros copiados al portapapeles`,
-          "success"
+        console.log(
+          `${selectedRegistros.value.length} registros copiados al portapapeles`
         );
       } catch (error) {
         console.error("Error al copiar registros:", error);
-        showNotification(
-          "Error al copiar los registros: " + error.message,
-          "error"
-        );
       }
     };
 
@@ -725,7 +677,7 @@ export default {
     const copyUsernameToClipboard = async (username) => {
       try {
         if (!username) {
-          showNotification("No hay usuario para copiar", "warning");
+          console.log("No hay usuario para copiar");
           return;
         }
 
@@ -756,10 +708,9 @@ export default {
 
         // Intentar copiar
         await copyText(username);
-        showNotification("Usuario copiado al portapapeles", "success");
+        console.log("Usuario copiado al portapapeles");
       } catch (error) {
         console.error("Error al copiar:", error);
-        showNotification(`Error al copiar: ${error.message}`, "error");
       }
     };
 
@@ -767,10 +718,7 @@ export default {
     const copyTextToClipboard = async (text, type = "Texto") => {
       try {
         if (!text) {
-          showNotification(
-            `No hay ${type.toLowerCase()} para copiar`,
-            "warning"
-          );
+          console.log(`No hay ${type.toLowerCase()} para copiar`);
           return;
         }
 
@@ -797,10 +745,9 @@ export default {
         };
 
         await copyText(text);
-        showNotification(`${type} copiado al portapapeles`, "success");
+        console.log(`${type} copiado al portapapeles`);
       } catch (error) {
         console.error("Error al copiar:", error);
-        showNotification(`Error al copiar: ${error.message}`, "error");
       }
     };
 
@@ -864,10 +811,9 @@ export default {
 
         // Intentar copiar
         await copyText(textToCopy);
-        showNotification("Contraseña copiada al portapapeles", "success");
+        console.log("Contraseña copiada al portapapeles");
       } catch (error) {
         console.error("Error al copiar:", error);
-        showNotification(`Error al copiar: ${error.message}`, "error");
       }
     };
 
@@ -888,7 +834,7 @@ export default {
     const openRegistroModal = (registro) => {
       // Solo admin puede abrir modal de registros
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -927,7 +873,7 @@ export default {
     const saveRegistro = async () => {
       // Solo admin puede crear/editar registros
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -984,17 +930,13 @@ export default {
           currentRegistro.value.id_TipoServicio
         );
 
-        const message = isEditingRegistro.value
-          ? `Registro para ${clienteName} (${serviceName}) actualizado con éxito`
-          : `Registro para ${clienteName} (${serviceName}) creado con éxito`;
-
-        showNotification(message, "success");
+        console.log(
+          isEditingRegistro.value
+            ? `Registro para ${clienteName} (${serviceName}) actualizado con éxito`
+            : `Registro para ${clienteName} (${serviceName}) creado con éxito`
+        );
       } catch (error) {
         console.error("Error:", error);
-        showNotification(
-          "Error al guardar el registro: " + error.message,
-          "error"
-        );
       }
     };
 
@@ -1005,7 +947,7 @@ export default {
     const deleteRegistro = async (id) => {
       // Solo admin puede eliminar registros
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -1023,11 +965,9 @@ export default {
         }
 
         await fetchRegistros();
-        const message = `Registro eliminado con éxito`;
-        showNotification(message, "success");
+        console.log(`Registro eliminado con éxito`);
       } catch (error) {
         console.error("Error al eliminar registro:", error);
-        showNotification("Error al eliminar el registro", "error");
       }
     };
 
@@ -1039,7 +979,7 @@ export default {
     const confirmDelete = (id, name) => {
       // Solo admin puede confirmar eliminación
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -1055,7 +995,7 @@ export default {
     const executeDelete = async () => {
       // Solo admin puede ejecutar eliminación
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -1101,7 +1041,6 @@ export default {
       currentRegistro,
       showDeleteConfirmModal,
       deleteItemName,
-      notifications,
       tableContainer,
       isDragging,
       showNotesModal,
@@ -1149,10 +1088,6 @@ export default {
       getClienteName,
       getServicioName,
       getTodayRegistrosCount,
-
-      // Notificaciones
-      showNotification,
-      removeNotification,
 
       // Métodos de selección
       allRegistrosSelected,
@@ -2109,68 +2044,8 @@ export default {
         </div>
       </div>
     </div>
-
-    <!-- Sistema de notificaciones -->
-    <div class="notifications-container">
-      <div
-        v-for="(notification, index) in notifications"
-        :key="index"
-        :class="['notification', `notification-${notification.type}`]"
-      >
-        <div class="notification-icon">
-          <svg
-            v-if="notification.type === 'success'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-            <path d="M22 4L12 14.01l-3-3"></path>
-          </svg>
-          <svg
-            v-else-if="notification.type === 'error'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
-          </svg>
-          <svg
-            v-else
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-        </div>
-        <div class="notification-content">
-          <p>{{ notification.message }}</p>
-        </div>
-        <button class="notification-close" @click="removeNotification(index)">
-          ×
-        </button>
-      </div>
-    </div>
   </div>
 </template>
-
 <style>
 /* Estilos para la vista de registros */
 

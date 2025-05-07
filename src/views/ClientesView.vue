@@ -115,35 +115,9 @@ export default {
           clientes.value = await response.json();
         }
 
-        showNotification("Clientes cargados correctamente", "info");
+        console.log("Clientes cargados correctamente");
       } catch (error) {
         console.error("Error al cargar clientes:", error);
-        showNotification("Error al cargar los clientes", "error");
-      }
-    };
-
-    // Métodos de notificación
-    const notifications = ref([]);
-    const showNotification = (message, type = "info") => {
-      const notification = {
-        message,
-        type,
-        id: Date.now(),
-      };
-
-      notifications.value.push(notification);
-
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        removeNotification(
-          notifications.value.findIndex((n) => n.id === notification.id)
-        );
-      }, 5000);
-    };
-
-    const removeNotification = (index) => {
-      if (index !== -1) {
-        notifications.value.splice(index, 1);
       }
     };
 
@@ -225,7 +199,7 @@ export default {
     const openClientModal = (cliente) => {
       // Solo admin puede abrir modal de clientes
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -262,7 +236,7 @@ export default {
     const saveCliente = async () => {
       // Solo admin puede crear/editar clientes
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -297,14 +271,13 @@ export default {
         await fetchClientes();
         closeClientModal();
 
-        const message = isEditingClient.value
-          ? `Cliente "${clienteData.nombre_Empresa}" actualizado con éxito`
-          : `Cliente "${clienteData.nombre_Empresa}" creado con éxito`;
-
-        showNotification(message, "success");
+        console.log(
+          isEditingClient.value
+            ? `Cliente "${clienteData.nombre_Empresa}" actualizado con éxito`
+            : `Cliente "${clienteData.nombre_Empresa}" creado con éxito`
+        );
       } catch (error) {
         console.error("Error:", error);
-        showNotification("Error al guardar el cliente", "error");
       }
     };
 
@@ -317,7 +290,7 @@ export default {
     const deleteCliente = async () => {
       // Solo admin puede eliminar clientes
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -350,16 +323,9 @@ export default {
 
         await fetchClientes();
         closeDeleteConfirmModal();
-        showNotification(
-          `Cliente "${clienteName}" eliminado con éxito`,
-          "success"
-        );
+        console.log(`Cliente "${clienteName}" eliminado con éxito`);
       } catch (error) {
         console.error("Error al eliminar cliente:", error);
-        showNotification(
-          `Error al eliminar el cliente: ${error.message}`,
-          "error"
-        );
       }
     };
 
@@ -367,7 +333,7 @@ export default {
     const confirmDelete = (id, name) => {
       // Solo admin puede confirmar eliminación
       if (!props.isAdmin) {
-        showNotification("No tienes permisos para esta acción", "error");
+        console.log("No tienes permisos para esta acción");
         return;
       }
 
@@ -402,7 +368,6 @@ export default {
       currentCliente,
       showDeleteConfirmModal,
       deleteItemName,
-      notifications,
       showNotesModal,
       viewingNotes,
       tableContainer,
@@ -422,8 +387,6 @@ export default {
       confirmDelete,
       closeDeleteConfirmModal,
       fetchClientes,
-      showNotification,
-      removeNotification,
       openNotesModal,
       closeNotesModal,
       hasNotes,
@@ -807,140 +770,11 @@ export default {
         </div>
       </div>
     </div>
-
-    <!-- Sistema de notificaciones -->
-    <div class="notifications-container">
-      <div
-        v-for="(notification, index) in notifications"
-        :key="index"
-        :class="['notification', `notification-${notification.type}`]"
-      >
-        <div class="notification-icon">
-          <svg
-            v-if="notification.type === 'success'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-            <path d="M22 4L12 14.01l-3-3"></path>
-          </svg>
-          <svg
-            v-else-if="notification.type === 'error'"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
-          </svg>
-          <svg
-            v-else
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-        </div>
-        <div class="notification-content">
-          <p>{{ notification.message }}</p>
-        </div>
-        <button class="notification-close" @click="removeNotification(index)">
-          ×
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
 <style scoped>
-/* Estilos para las notificaciones */
-.notifications-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 350px;
-}
-
-.notification {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  animation: slideInRight 0.3s ease;
-}
-
-.notification-success {
-  background-color: #2ecc71;
-}
-
-.notification-error {
-  background-color: #e74c3c;
-}
-
-.notification-info {
-  background-color: #3498db;
-}
-
-.notification-warning {
-  background-color: #f39c12;
-}
-
-.notification-icon {
-  margin-right: 16px;
-}
-
-.notification-content {
-  flex-grow: 1;
-}
-
-.notification-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 20px;
-  opacity: 0.7;
-  cursor: pointer;
-}
-
-.notification-close:hover {
-  opacity: 1;
-}
-
-/* Animaciones */
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
+/* Estilos para la vista de clientes - sin sistema de notificaciones */
 /* Estilos para el contenedor arrastrable */
 .draggable {
   cursor: grab;
