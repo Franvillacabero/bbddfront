@@ -2603,9 +2603,10 @@ export default {
 }
 
 .data-table td {
-  padding: 12px;
+  padding: 16px 24px;
   border-bottom: 1px solid #dee2e6;
   font-size: 14px;
+  text-align: left;
 }
 
 /* Ajustes para datos truncados */
