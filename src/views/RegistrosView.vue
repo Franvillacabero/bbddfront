@@ -1,5 +1,5 @@
 <script>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 
 export default {
   props: {
@@ -30,6 +30,12 @@ export default {
     const startX = ref(0);
     const scrollLeft = ref(0);
 
+    // Referencias y estados para manejar cierre de dropdowns
+    const clientSearchRef = ref(null);
+    const serviceSearchRef = ref(null);
+    const showClientResults = ref(false);
+    const showServiceResults = ref(false);
+
     // Estados para contraseñas
     const passwordVisibility = ref({});
     const selectedRegistros = ref([]);
@@ -58,6 +64,56 @@ export default {
       isp: "",
       nombre_BBDD: "", // Cambiado de nombre_bt a nombre_BBDD
     });
+
+    // Función para manejar clics fuera de los dropdowns
+    const setupClickAwayListeners = () => {
+      const handleClickOutside = (event) => {
+        // Para el dropdown de clientes
+        if (
+          clientSearchRef.value &&
+          !clientSearchRef.value.contains(event.target)
+        ) {
+          showClientResults.value = false;
+        }
+
+        // Para el dropdown de tipos de servicio
+        if (
+          serviceSearchRef.value &&
+          !serviceSearchRef.value.contains(event.target)
+        ) {
+          showServiceResults.value = false;
+        }
+      };
+
+      // Añade el listener
+      document.addEventListener("mousedown", handleClickOutside);
+
+      // Retorna una función para remover el listener
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    };
+
+    // Funciones para manejar los dropdowns
+    const focusClientSearch = () => {
+      showClientResults.value = true;
+      showServiceResults.value = false; // Cierra el otro dropdown
+    };
+
+    const focusServiceSearch = () => {
+      showServiceResults.value = true;
+      showClientResults.value = false; // Cierra el otro dropdown
+    };
+
+    const selectClient = (clienteId) => {
+      currentRegistro.value.id_Cliente = clienteId;
+      showClientResults.value = false;
+    };
+
+    const selectService = (servicioId) => {
+      currentRegistro.value.id_TipoServicio = servicioId;
+      showServiceResults.value = false;
+    };
 
     // Métodos para el desplazamiento horizontal
     const handleMouseDown = (e) => {
@@ -841,6 +897,8 @@ export default {
       // Resetear la búsqueda de clientes y servicios
       clienteSearchQuery.value = "";
       servicioSearchQuery.value = "";
+      showClientResults.value = false;
+      showServiceResults.value = false;
 
       if (registro) {
         // Para edición: copiar datos pero limpiar la contraseña
@@ -1021,6 +1079,12 @@ export default {
       fetchClientes();
       fetchTiposServicios();
       fetchRegistros();
+
+      // Configura el listener para clics fuera
+      const removeListener = setupClickAwayListeners();
+
+      // Limpia el listener cuando el componente se desmonte
+      onUnmounted(removeListener);
     });
 
     return {
@@ -1046,11 +1110,11 @@ export default {
       showNotesModal,
       viewingNotes,
 
-      // Métodos para el desplazamiento
-      handleMouseDown,
-      handleMouseLeave,
-      handleMouseUp,
-      handleMouseMove,
+      // Estados para el control de dropdowns
+      clientSearchRef,
+      serviceSearchRef,
+      showClientResults,
+      showServiceResults,
 
       // Estados de contraseñas
       passwordVisibility,
@@ -1061,6 +1125,18 @@ export default {
       tiposServicios,
       sortedClientes,
       sortedTiposServicios,
+
+      // Métodos para el desplazamiento
+      handleMouseDown,
+      handleMouseLeave,
+      handleMouseUp,
+      handleMouseMove,
+
+      // Métodos para dropdowns
+      focusClientSearch,
+      focusServiceSearch,
+      selectClient,
+      selectService,
 
       // Métodos
       openRegistroModal,
@@ -1734,16 +1810,19 @@ export default {
           <div class="form-row">
             <div class="form-group">
               <label for="clienteSearch">Cliente</label>
-              <div class="selector-with-search">
+              <div ref="clientSearchRef" class="selector-with-search">
                 <input
                   type="text"
+                  id="clienteSearch"
                   v-model="clienteSearchQuery"
                   class="form-input"
                   placeholder="Buscar cliente..."
+                  @focus="focusClientSearch"
+                  @input="focusClientSearch"
                 />
                 <div
                   class="search-results-simple"
-                  v-if="clienteSearchQuery.trim()"
+                  v-if="showClientResults && clienteSearchQuery.trim()"
                 >
                   <div
                     v-for="cliente in filteredClientes"
@@ -1753,7 +1832,7 @@ export default {
                       selected:
                         currentRegistro.id_Cliente == cliente.id_Cliente,
                     }"
-                    @click="currentRegistro.id_Cliente = cliente.id_Cliente"
+                    @click="selectClient(cliente.id_Cliente)"
                   >
                     {{ cliente.nombre_Empresa }}
                   </div>
@@ -1779,16 +1858,19 @@ export default {
 
             <div class="form-group">
               <label for="servicioSearch">Tipo de Servicio</label>
-              <div class="selector-with-search">
+              <div ref="serviceSearchRef" class="selector-with-search">
                 <input
                   type="text"
+                  id="servicioSearch"
                   v-model="servicioSearchQuery"
                   class="form-input"
                   placeholder="Buscar tipo de servicio..."
+                  @focus="focusServiceSearch"
+                  @input="focusServiceSearch"
                 />
                 <div
                   class="search-results-simple"
-                  v-if="servicioSearchQuery.trim()"
+                  v-if="showServiceResults && servicioSearchQuery.trim()"
                 >
                   <div
                     v-for="servicio in filteredServicios"
@@ -1799,9 +1881,7 @@ export default {
                         currentRegistro.id_TipoServicio ==
                         servicio.id_TipoServicio,
                     }"
-                    @click="
-                      currentRegistro.id_TipoServicio = servicio.id_TipoServicio
-                    "
+                    @click="selectService(servicio.id_TipoServicio)"
                   >
                     {{ servicio.nombre }}
                   </div>
@@ -1828,7 +1908,6 @@ export default {
               </div>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="usuario">Usuario</label>
