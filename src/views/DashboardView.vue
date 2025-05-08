@@ -1248,7 +1248,6 @@ const getInitials = () => {
 
 .user-name-cell {
   font-weight: 600;
-  margin-right: 8px;
   flex-grow: 1;
 }
 

@@ -813,7 +813,6 @@ export default {
 .service-info {
   display: flex;
   align-items: center;
-  padding-left: 10px;
 }
 
 .service-avatar {

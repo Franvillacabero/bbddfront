@@ -493,7 +493,6 @@
 .user-info-cell {
   display: flex;
   align-items: center;
-  padding-left: 10px;
 }
 
 .company-avatar,
@@ -1114,7 +1113,6 @@
 
 .user-name-cell {
   font-weight: 600;
-  margin-right: 8px;
   flex-grow: 1;
 }
 
