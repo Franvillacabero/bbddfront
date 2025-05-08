@@ -382,13 +382,18 @@ export default {
     // Filtrar tipos de servicio según la búsqueda
     const filteredTiposServicios = computed(() => {
       const query = searchQuery.value.toLowerCase().trim();
-      if (!query) return tiposServicios.value;
+      let result = tiposServicios.value;
 
-      return tiposServicios.value.filter(
-        (tipo) =>
-          tipo.nombre.toLowerCase().includes(query) ||
-          tipo.id_TipoServicio.toString().includes(query)
-      );
+      if (query) {
+        result = result.filter(
+          (tipo) =>
+            tipo.nombre.toLowerCase().includes(query) ||
+            tipo.id_TipoServicio.toString().includes(query)
+        );
+      }
+
+      // Ordenar alfabéticamente por nombre
+      return [...result].sort((a, b) => a.nombre.localeCompare(b.nombre));
     });
 
     // Ordenar tipos de servicio alfabéticamente
