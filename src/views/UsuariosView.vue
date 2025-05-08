@@ -100,14 +100,19 @@ export default {
     // Filtrar usuarios según la búsqueda
     const filteredUsuarios = computed(() => {
       const query = searchQuery.value.toLowerCase().trim();
+      let result = usuarios.value;
 
-      if (!query) return usuarios.value;
+      if (query) {
+        result = result.filter(
+          (usuario) =>
+            usuario.nombre.toLowerCase().includes(query) ||
+            (usuario.id_Usuario &&
+              usuario.id_Usuario.toString().includes(query))
+        );
+      }
 
-      return usuarios.value.filter(
-        (usuario) =>
-          usuario.nombre.toLowerCase().includes(query) ||
-          (usuario.id_Usuario && usuario.id_Usuario.toString().includes(query))
-      );
+      // Ordenar alfabéticamente por nombre de usuario
+      return [...result].sort((a, b) => a.nombre.localeCompare(b.nombre));
     });
 
     // Método para obtener iniciales del usuario
