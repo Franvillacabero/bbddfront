@@ -852,7 +852,6 @@ export default {
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new const errorText = await response.text();
             throw new Error(`No se pudo obtener la contraseña: ${errorText}`);
           }
 
