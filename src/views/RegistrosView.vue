@@ -65,6 +65,39 @@ export default {
       nombre_BBDD: "", // Cambiado de nombre_bt a nombre_BBDD
     });
 
+    // Funciones para manejar los dropdowns
+    const focusClientSearch = () => {
+      showClientResults.value = true;
+      showServiceResults.value = false; // Cierra el otro dropdown
+      // No borrar el texto de búsqueda cuando ya hay un elemento seleccionado
+      if (!currentRegistro.value.id_Cliente) {
+        clienteSearchQuery.value = "";
+      }
+    };
+
+    const focusServiceSearch = () => {
+      showServiceResults.value = true;
+      showClientResults.value = false; // Cierra el otro dropdown
+      // No borrar el texto de búsqueda cuando ya hay un elemento seleccionado
+      if (!currentRegistro.value.id_TipoServicio) {
+        servicioSearchQuery.value = "";
+      }
+    };
+
+    const selectClient = (clienteId) => {
+      currentRegistro.value.id_Cliente = clienteId;
+      showClientResults.value = false;
+      // Limpiar la cadena de búsqueda para mostrar el elemento seleccionado
+      clienteSearchQuery.value = "";
+    };
+
+    const selectService = (servicioId) => {
+      currentRegistro.value.id_TipoServicio = servicioId;
+      showServiceResults.value = false;
+      // Limpiar la cadena de búsqueda para mostrar el elemento seleccionado
+      servicioSearchQuery.value = "";
+    };
+
     // Función para manejar clics fuera de los dropdowns
     const setupClickAwayListeners = () => {
       const handleClickOutside = (event) => {
@@ -74,6 +107,10 @@ export default {
           !clientSearchRef.value.contains(event.target)
         ) {
           showClientResults.value = false;
+          // Si no hay cliente seleccionado, limpiar la búsqueda
+          if (!currentRegistro.value.id_Cliente) {
+            clienteSearchQuery.value = "";
+          }
         }
 
         // Para el dropdown de tipos de servicio
@@ -82,6 +119,10 @@ export default {
           !serviceSearchRef.value.contains(event.target)
         ) {
           showServiceResults.value = false;
+          // Si no hay servicio seleccionado, limpiar la búsqueda
+          if (!currentRegistro.value.id_TipoServicio) {
+            servicioSearchQuery.value = "";
+          }
         }
       };
 
@@ -92,27 +133,6 @@ export default {
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
-    };
-
-    // Funciones para manejar los dropdowns
-    const focusClientSearch = () => {
-      showClientResults.value = true;
-      showServiceResults.value = false; // Cierra el otro dropdown
-    };
-
-    const focusServiceSearch = () => {
-      showServiceResults.value = true;
-      showClientResults.value = false; // Cierra el otro dropdown
-    };
-
-    const selectClient = (clienteId) => {
-      currentRegistro.value.id_Cliente = clienteId;
-      showClientResults.value = false;
-    };
-
-    const selectService = (servicioId) => {
-      currentRegistro.value.id_TipoServicio = servicioId;
-      showServiceResults.value = false;
     };
 
     // Métodos para el desplazamiento horizontal
@@ -832,6 +852,7 @@ export default {
 
           if (!response.ok) {
             const errorText = await response.text();
+            throw new const errorText = await response.text();
             throw new Error(`No se pudo obtener la contraseña: ${errorText}`);
           }
 
@@ -1811,47 +1832,86 @@ export default {
             <div class="form-group">
               <label for="clienteSearch">Cliente</label>
               <div ref="clientSearchRef" class="selector-with-search">
-                <input
-                  type="text"
-                  id="clienteSearch"
-                  v-model="clienteSearchQuery"
-                  class="form-input"
-                  placeholder="Buscar cliente..."
-                  @focus="focusClientSearch"
-                  @input="focusClientSearch"
-                />
-                <div
-                  class="search-results-simple"
-                  v-if="showClientResults && clienteSearchQuery.trim()"
-                >
+                <div class="searchable-select">
                   <div
-                    v-for="cliente in filteredClientes"
-                    :key="cliente.id_Cliente"
-                    class="search-result-item"
-                    :class="{
-                      selected:
-                        currentRegistro.id_Cliente == cliente.id_Cliente,
-                    }"
-                    @click="selectClient(cliente.id_Cliente)"
+                    class="select-input-container"
+                    @click="focusClientSearch"
                   >
-                    {{ cliente.nombre_Empresa }}
+                    <input
+                      type="text"
+                      id="clienteSearch"
+                      v-model="clienteSearchQuery"
+                      class="form-input select-input"
+                      :placeholder="
+                        currentRegistro.id_Cliente ? '' : 'Buscar cliente...'
+                      "
+                      @focus="focusClientSearch"
+                      @input="focusClientSearch"
+                    />
+                    <div
+                      v-if="currentRegistro.id_Cliente"
+                      class="selected-item-inline"
+                    >
+                      {{ getClienteName(currentRegistro.id_Cliente) }}
+                    </div>
+                    <div class="select-icons">
+                      <button
+                        v-if="currentRegistro.id_Cliente"
+                        type="button"
+                        @click.stop="
+                          currentRegistro.id_Cliente = '';
+                          clienteSearchQuery = '';
+                        "
+                        class="clear-button"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                      <span class="dropdown-icon">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path d="M6 9l6 6 6-6"></path>
+                        </svg>
+                      </span>
+                    </div>
                   </div>
-                  <div
-                    v-if="filteredClientes.length === 0"
-                    class="search-no-results"
-                  >
-                    No se encontraron resultados
+                  <div class="search-results-dropdown" v-if="showClientResults">
+                    <div
+                      v-for="cliente in filteredClientes"
+                      :key="cliente.id_Cliente"
+                      class="search-result-item"
+                      :class="{
+                        selected:
+                          currentRegistro.id_Cliente == cliente.id_Cliente,
+                      }"
+                      @click="selectClient(cliente.id_Cliente)"
+                    >
+                      {{ cliente.nombre_Empresa }}
+                    </div>
+                    <div
+                      v-if="filteredClientes.length === 0"
+                      class="search-no-results"
+                    >
+                      No se encontraron resultados
+                    </div>
                   </div>
-                </div>
-                <div v-if="currentRegistro.id_Cliente" class="selected-item">
-                  {{ getClienteName(currentRegistro.id_Cliente) }}
-                  <button
-                    type="button"
-                    @click="currentRegistro.id_Cliente = ''"
-                    class="clear-selection"
-                  >
-                    ×
-                  </button>
                 </div>
               </div>
             </div>
@@ -1859,55 +1919,97 @@ export default {
             <div class="form-group">
               <label for="servicioSearch">Tipo de Servicio</label>
               <div ref="serviceSearchRef" class="selector-with-search">
-                <input
-                  type="text"
-                  id="servicioSearch"
-                  v-model="servicioSearchQuery"
-                  class="form-input"
-                  placeholder="Buscar tipo de servicio..."
-                  @focus="focusServiceSearch"
-                  @input="focusServiceSearch"
-                />
-                <div
-                  class="search-results-simple"
-                  v-if="showServiceResults && servicioSearchQuery.trim()"
-                >
+                <div class="searchable-select">
                   <div
-                    v-for="servicio in filteredServicios"
-                    :key="servicio.id_TipoServicio"
-                    class="search-result-item"
-                    :class="{
-                      selected:
-                        currentRegistro.id_TipoServicio ==
-                        servicio.id_TipoServicio,
-                    }"
-                    @click="selectService(servicio.id_TipoServicio)"
+                    class="select-input-container"
+                    @click="focusServiceSearch"
                   >
-                    {{ servicio.nombre }}
+                    <input
+                      type="text"
+                      id="servicioSearch"
+                      v-model="servicioSearchQuery"
+                      class="form-input select-input"
+                      :placeholder="
+                        currentRegistro.id_TipoServicio
+                          ? ''
+                          : 'Buscar tipo de servicio...'
+                      "
+                      @focus="focusServiceSearch"
+                      @input="focusServiceSearch"
+                    />
+                    <div
+                      v-if="currentRegistro.id_TipoServicio"
+                      class="selected-item-inline"
+                    >
+                      {{ getServicioName(currentRegistro.id_TipoServicio) }}
+                    </div>
+                    <div class="select-icons">
+                      <button
+                        v-if="currentRegistro.id_TipoServicio"
+                        type="button"
+                        @click.stop="
+                          currentRegistro.id_TipoServicio = '';
+                          servicioSearchQuery = '';
+                        "
+                        class="clear-button"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                      <span class="dropdown-icon">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path d="M6 9l6 6 6-6"></path>
+                        </svg>
+                      </span>
+                    </div>
                   </div>
                   <div
-                    v-if="filteredServicios.length === 0"
-                    class="search-no-results"
+                    class="search-results-dropdown"
+                    v-if="showServiceResults"
                   >
-                    No se encontraron resultados
+                    <div
+                      v-for="servicio in filteredServicios"
+                      :key="servicio.id_TipoServicio"
+                      class="search-result-item"
+                      :class="{
+                        selected:
+                          currentRegistro.id_TipoServicio ==
+                          servicio.id_TipoServicio,
+                      }"
+                      @click="selectService(servicio.id_TipoServicio)"
+                    >
+                      {{ servicio.nombre }}
+                    </div>
+                    <div
+                      v-if="filteredServicios.length === 0"
+                      class="search-no-results"
+                    >
+                      No se encontraron resultados
+                    </div>
                   </div>
-                </div>
-                <div
-                  v-if="currentRegistro.id_TipoServicio"
-                  class="selected-item"
-                >
-                  {{ getServicioName(currentRegistro.id_TipoServicio) }}
-                  <button
-                    type="button"
-                    @click="currentRegistro.id_TipoServicio = ''"
-                    class="clear-selection"
-                  >
-                    ×
-                  </button>
                 </div>
               </div>
             </div>
           </div>
+
           <div class="form-row">
             <div class="form-group">
               <label for="usuario">Usuario</label>
@@ -1957,6 +2059,7 @@ export default {
             </div>
           </div>
 
+          <!-- El resto del formulario permanece igual -->
           <div class="form-row">
             <div class="form-group">
               <label for="url">URL</label>
@@ -2406,13 +2509,108 @@ export default {
   width: 150px;
 }
 
-/* Nuevo estilo para el buscador en selección de cliente */
+/* Nuevo estilo para el select-like searchbox */
 .selector-with-search {
   position: relative;
   width: 100%;
 }
 
-.search-results-simple {
+/* NUEVOS ESTILOS PARA EL SELECTOR CON BÚSQUEDA */
+.searchable-select {
+  position: relative;
+  width: 100%;
+}
+
+.select-input-container {
+  position: relative;
+  display: flex;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.select-input-container:hover {
+  border-color: #c1272d;
+}
+
+.select-input-container:focus-within {
+  border-color: #c1272d;
+  box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
+}
+
+.select-input {
+  flex: 1;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent;
+  padding-right: 40px;
+  z-index: 1;
+  position: relative;
+}
+
+.select-input:focus {
+  outline: none;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.selected-item-inline {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 500;
+  color: #2c3e50;
+  pointer-events: none;
+  max-width: calc(100% - 70px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 0;
+}
+
+.select-icons {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 2;
+}
+
+.clear-button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.clear-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #c1272d;
+}
+
+.dropdown-icon {
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-results-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
@@ -2449,38 +2647,6 @@ export default {
   text-align: center;
   color: #6c757d;
   font-style: italic;
-}
-
-.selected-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 10px;
-  padding: 10px;
-  background-color: rgba(193, 39, 45, 0.05);
-  border-radius: 8px;
-  color: #c1272d;
-  font-weight: 600;
-}
-
-.clear-selection {
-  background: none;
-  border: none;
-  color: #6c757d;
-  font-size: 18px;
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.clear-selection:hover {
-  background-color: rgba(193, 39, 45, 0.1);
-  color: #c1272d;
 }
 
 /* Background logo para el modal - SVG de fondo */
